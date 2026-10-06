@@ -539,7 +539,9 @@ namespace OmniBackupLauncher
         public MainWindow()
         {
             InitializeComponent();
-            InitWebViewAsync();
+            this.Shown += (s, e) => {
+                InitWebViewAsync();
+            };
         }
 
         private void InitializeComponent()
@@ -598,12 +600,29 @@ namespace OmniBackupLauncher
                 // Navigate directly to the local server
                 webView.Source = new Uri("http://127.0.0.1:3060");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                // If WebView2 runtime fails on client machine, launch native standalone app window and hide this empty container
-                this.BeginInvoke(new Action(() => {
+                // If WebView2 runtime is missing or fails on client machine, safely launch native standalone browser window
+                SafeFallbackLaunch();
+            }
+        }
+
+        private void SafeFallbackLaunch()
+        {
+            try
+            {
+                if (this.IsHandleCreated && this.InvokeRequired)
+                {
+                    this.BeginInvoke(new Action(FallbackLaunch));
+                }
+                else
+                {
                     FallbackLaunch();
-                }));
+                }
+            }
+            catch
+            {
+                FallbackLaunch();
             }
         }
 
@@ -611,10 +630,11 @@ namespace OmniBackupLauncher
         {
             try
             {
-                // Hide and close this empty black window so user only sees the clean app window
+                // Hide this empty container so user only sees the clean app window
                 this.Opacity = 0;
                 this.ShowInTaskbar = false;
                 this.Visible = false;
+                this.Hide();
 
                 string browserExe = FindChromiumBrowser();
                 string appUrl = "http://127.0.0.1:3060";
