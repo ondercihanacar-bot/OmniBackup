@@ -18,7 +18,8 @@ import {
   Search,
   FolderPlus,
   Database,
-  Monitor
+  Monitor,
+  Network
 } from 'lucide-react';
 import { api } from '../api';
 
@@ -30,11 +31,12 @@ export default function FolderPickerModal({
   currentSelectedPath, 
   initialPath,
   isDestination = false,
-  initialExcludedPaths = []
+  initialExcludedPaths = [],
+  nasConfig = null
 }) {
   if (!isOpen) return null;
 
-  const startingPath = currentSelectedPath || initialPath || 'C:\\';
+  const startingPath = currentSelectedPath || initialPath || (nasConfig && nasConfig.host ? `\\\\${nasConfig.host}\\${nasConfig.share || ''}` : 'C:\\');
   const [drives, setDrives] = useState([]);
   const [loadingDrives, setLoadingDrives] = useState(false);
   
@@ -85,31 +87,57 @@ export default function FolderPickerModal({
       const data = await api.getDrives();
       let driveList = [];
       if (Array.isArray(data) && data.length > 0) {
-        driveList = data;
+        driveList = [...data];
       } else {
         driveList = [
           { name: 'C:\\', label: 'C: (Yerel Disk)' },
           { name: 'D:\\', label: 'D: (Depolama)' }
         ];
       }
+
+      // If NAS config is provided, add NAS root node at the top
+      if (nasConfig && nasConfig.host) {
+        let nasRoot = `\\\\${nasConfig.host}`;
+        if (nasConfig.share) {
+          nasRoot += `\\${nasConfig.share}`;
+        }
+        if (nasConfig.subFolder) {
+          nasRoot += `\\${nasConfig.subFolder}`;
+        }
+        
+        const nasEntry = {
+          name: nasRoot,
+          label: `🌐 NAS / Ağ Paylaşımı (${nasRoot})`,
+          isNas: true
+        };
+
+        // Prepend NAS so user immediately sees their NAS device
+        driveList = [nasEntry, ...driveList];
+      }
+
       setDrives(driveList);
 
-      // Auto-expand the drive of startingPath
-      const targetDrive = driveList.find(d => 
-        startingPath.toUpperCase().startsWith(d.name.toUpperCase().substring(0, 2))
-      ) || driveList[0];
+      // Auto-expand NAS or startingPath
+      const targetDrive = driveList.find(d => {
+        if (d.isNas && startingPath.toLowerCase().startsWith(d.name.toLowerCase())) return true;
+        return startingPath.toUpperCase().startsWith(d.name.toUpperCase().substring(0, 2));
+      }) || driveList[0];
 
       if (targetDrive) {
         expandNode(targetDrive.name);
       }
     } catch (e) {
       console.error("Drives load error:", e);
-      const fallback = [
+      let fallback = [
         { name: 'C:\\', label: 'C: (Yerel Disk)' },
         { name: 'D:\\', label: 'D: (Depolama)' }
       ];
+      if (nasConfig && nasConfig.host) {
+        const nasRoot = `\\\\${nasConfig.host}\\${nasConfig.share || ''}`;
+        fallback = [{ name: nasRoot, label: `🌐 NAS / Ağ Paylaşımı (${nasRoot})`, isNas: true }, ...fallback];
+      }
       setDrives(fallback);
-      expandNode('C:\\');
+      expandNode(fallback[0].name);
     } finally {
       setLoadingDrives(false);
     }
@@ -674,8 +702,17 @@ export default function FolderPickerModal({
                           </button>
                         )}
 
-                        <HardDrive className="w-4 h-4 text-sky-400 shrink-0" />
-                        <span className="font-semibold">{drive.label || drive.name}</span>
+                        {drive.isNas ? (
+                          <Network className="w-4 h-4 text-emerald-400 shrink-0" />
+                        ) : (
+                          <HardDrive className="w-4 h-4 text-sky-400 shrink-0" />
+                        )}
+                        <span className={`font-semibold ${drive.isNas ? 'text-emerald-300' : ''}`}>{drive.label || drive.name}</span>
+                        {drive.isNas && (
+                          <span className="px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800 text-[9px] font-mono font-bold">
+                            NAS / SMB
+                          </span>
+                        )}
                       </div>
 
                       <div className="flex items-center gap-2 shrink-0">

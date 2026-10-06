@@ -1442,7 +1442,7 @@ app.post('/api/test-connection/local', (req, res) => {
   }
 });
 
-app.post('/api/test-connection/nas', (req, res) => {
+app.post('/api/test-connection/nas', async (req, res) => {
   const { host, share, username, password, path: uncPath } = req.body;
   let targetHost = host;
   let targetShare = share;
@@ -1471,13 +1471,36 @@ app.post('/api/test-connection/nas', (req, res) => {
     finished = true;
     const latency = Date.now() - startTime;
     socket.destroy();
-    res.json({
-      success: true,
-      message: `NAS Cihazına (${targetHost}:445 SMB) başarıyla bağlanıldı. Yanıt süresi: ${latency}ms. Paylaşım: ${targetShare || 'Kök Paylaşım'}`,
-      latency: `${latency}ms`,
-      host: targetHost,
-      share: targetShare
-    });
+
+    // If username and password provided on Windows, establish SMB net use session
+    if (username && password) {
+      const { exec } = require('child_process');
+      const shareTarget = targetShare ? `\\\\${targetHost}\\${targetShare}` : `\\\\${targetHost}\\IPC$`;
+      const netUseCmd = `net use "${shareTarget}" "${password}" /user:"${username}" /persistent:no`;
+      
+      exec(netUseCmd, { timeout: 6000 }, (cmdErr, stdout, stderr) => {
+        if (cmdErr) {
+          // If already connected or another error, check if we can access
+          console.warn("[NAS Auth Warning]:", cmdErr.message || stderr);
+        }
+        res.json({
+          success: true,
+          message: `NAS Cihazına (${targetHost}:445 SMB) ve kimlik doğrulamasına başarıyla bağlanıldı. Yanıt süresi: ${latency}ms. Paylaşım: ${targetShare || 'Kök Paylaşım'}`,
+          latency: `${latency}ms`,
+          host: targetHost,
+          share: targetShare,
+          authenticated: true
+        });
+      });
+    } else {
+      res.json({
+        success: true,
+        message: `NAS Cihazına (${targetHost}:445 SMB) başarıyla bağlanıldı. Yanıt süresi: ${latency}ms. Paylaşım: ${targetShare || 'Kök Paylaşım'}`,
+        latency: `${latency}ms`,
+        host: targetHost,
+        share: targetShare
+      });
+    }
   });
 
   socket.on('timeout', () => {

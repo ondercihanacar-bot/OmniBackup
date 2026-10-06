@@ -425,7 +425,7 @@
     "activatedAt": null,
     "expiresAt": "2026-10-19T14:00:45.988Z",
     "omniHubConnected": false,
-    "omniHubServerUrl": "http://127.0.0.1:5200",
+    "omniHubServerUrl": "https://omnihub-sd23.onrender.com",
     "maxAgents": "Sınırsız (Demo)",
     "maxSqlDatabases": "Sınırsız (Demo)",
     "allowedFeatures": [

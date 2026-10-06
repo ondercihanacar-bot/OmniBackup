@@ -202,13 +202,38 @@ export default function JobModal({ isOpen, onClose, onSave, job, destinations, a
       const isNas = selectedPath.startsWith('\\\\');
       const destName = isNas ? `NAS Paylaşımı (${selectedPath})` : `Yerel Yedekleme Diski (${selectedPath})`;
       
+      // If a UNC path was chosen from NAS tree, also populate NAS fields in formData
+      let updatedNasHost = formData.nasHost;
+      let updatedNasShare = formData.nasShare;
+      let updatedNasSubFolder = formData.nasSubFolder;
+
+      if (isNas) {
+        // e.g. \\192.168.10.240\OmniBackup\Finans -> host: 192.168.10.240, share: OmniBackup, sub: Finans
+        const parts = selectedPath.replace(/^\\\\/, '').split('\\').filter(Boolean);
+        if (parts.length >= 1) updatedNasHost = parts[0];
+        if (parts.length >= 2) updatedNasShare = parts[1];
+        if (parts.length >= 3) updatedNasSubFolder = parts.slice(2).join('\\');
+      }
+
       setFormData(prev => ({
         ...prev,
         customDestinationPath: selectedPath,
         destinationPath: selectedPath,
-        destCategory: isNas ? 'nas' : 'local'
+        destCategory: isNas ? 'nas' : 'local',
+        ...(isNas ? {
+          nasHost: updatedNasHost || prev.nasHost,
+          nasShare: updatedNasShare || prev.nasShare,
+          nasSubFolder: updatedNasSubFolder || prev.nasSubFolder
+        } : {})
       }));
       setLocalTestStatus(null);
+      if (isNas) {
+        setNasTestStatus({
+          loading: false,
+          success: true,
+          message: `Ağaçtan NAS klasörü seçildi: ${selectedPath}`
+        });
+      }
 
       // Create or select destination for this target folder
       try {
@@ -1513,6 +1538,13 @@ export default function JobModal({ isOpen, onClose, onSave, job, destinations, a
         currentSelectedPath={pickerTarget === 'source' ? formData.sourcePath : (formData.customDestinationPath || formData.destinationPath || '')}
         isDestination={pickerTarget === 'destination'}
         initialExcludedPaths={pickerTarget === 'source' ? (formData.excludedPaths || []) : []}
+        nasConfig={pickerTarget === 'destination' ? {
+          host: formData.nasHost,
+          share: formData.nasShare,
+          subFolder: formData.nasSubFolder,
+          username: formData.nasUsername,
+          password: formData.nasPassword
+        } : null}
         onSelect={handleSelectFolder}
         onSelectPath={handleSelectFolder}
       />
