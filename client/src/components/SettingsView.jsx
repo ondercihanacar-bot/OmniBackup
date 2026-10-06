@@ -650,15 +650,29 @@ export default function SettingsView({ settings, onSaveSettings }) {
               </button>
 
               {updateData?.hasUpdate && (
-                <button
-                  type="button"
-                  onClick={handleApplyUpdate}
-                  disabled={updateApplying}
-                  className="px-4 py-2 rounded-lg bg-gradient-to-r from-[#0070e0] to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-md transition cursor-pointer"
-                >
-                  <DownloadCloud className="w-3.5 h-3.5" />
-                  <span>{updateApplying ? 'Yükleniyor...' : `v${updateData.latestVersion}'e Güncelle`}</span>
-                </button>
+                <>
+                  <a
+                    href={updateData.setupUrl || 'https://github.com/ondercihanacar-bot/OmniBackup/raw/main/OmniBackup_Setup.exe'}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    download
+                    className="px-3.5 py-2 rounded-lg bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
+                    title="Yeni sürüm offline setup dosyasını bilgisayara indir"
+                  >
+                    <DownloadCloud className="w-3.5 h-3.5 text-slate-600" />
+                    <span>Setup İndir (43 MB)</span>
+                  </a>
+
+                  <button
+                    type="button"
+                    onClick={handleApplyUpdate}
+                    disabled={updateApplying}
+                    className="px-4 py-2 rounded-lg bg-gradient-to-r from-[#0070e0] to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-md transition cursor-pointer"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${updateApplying ? 'animate-spin' : ''}`} />
+                    <span>{updateApplying ? 'Yükleniyor...' : `v${updateData.latestVersion}'e Güncelle`}</span>
+                  </button>
+                </>
               )}
             </div>
           </div>

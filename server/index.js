@@ -1676,9 +1676,11 @@ app.get('/api/update/check', async (req, res) => {
       latestVersion: remoteMeta.version,
       buildDate: remoteMeta.buildDate,
       mandatory: remoteMeta.mandatory || false,
-      packageSize: remoteMeta.packageSize || '4.9 MB',
+      packageSize: remoteMeta.packageSize || '2.9 MB',
+      setupSize: remoteMeta.setupSize || '43.8 MB',
       releaseNotes: remoteMeta.releaseNotes || 'Genel sistem performans ve güvenlik güncellemeleri.',
-      downloadUrl: remoteMeta.downloadUrl || '/api/update/download'
+      downloadUrl: remoteMeta.downloadUrl || '/api/update/download',
+      setupUrl: remoteMeta.setupUrl || 'https://github.com/ondercihanacar-bot/OmniBackup/raw/main/OmniBackup_Setup.exe'
     });
   } catch (err) {
     res.status(500).json({ hasUpdate: false, error: err.message });

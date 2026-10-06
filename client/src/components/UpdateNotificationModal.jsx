@@ -158,16 +158,29 @@ export default function UpdateNotificationModal({ isOpen, onClose, updateInfo, o
             {!updateInfo.mandatory && !isUpdating && (
               <button
                 onClick={onClose}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-200 transition cursor-pointer"
+                className="px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-200 transition cursor-pointer"
               >
                 Daha Sonra
               </button>
             )}
 
+            {/* Direct Setup Installer Download Option */}
+            <a
+              href={updateInfo.setupUrl || 'https://github.com/ondercihanacar-bot/OmniBackup/raw/main/OmniBackup_Setup.exe'}
+              target="_blank"
+              rel="noopener noreferrer"
+              download
+              className="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 bg-white border border-slate-300 hover:bg-slate-100 flex items-center gap-1.5 shadow-xs transition cursor-pointer"
+              title="Yeni sürüm setup dosyasını bilgisayara indirip elle kurmak için tıklayın"
+            >
+              <DownloadCloud className="w-3.5 h-3.5 text-slate-600" />
+              <span>Setup İndir (43 MB)</span>
+            </a>
+
             <button
               onClick={handleStartUpdate}
               disabled={isUpdating}
-              className={`px-5 py-2 rounded-xl text-xs font-bold text-white shadow-md flex items-center gap-1.5 transition cursor-pointer ${
+              className={`px-4 py-2 rounded-xl text-xs font-bold text-white shadow-md flex items-center gap-1.5 transition cursor-pointer ${
                 isUpdating 
                   ? 'bg-slate-400 cursor-not-allowed' 
                   : 'bg-gradient-to-r from-[#0070e0] to-blue-600 hover:from-blue-600 hover:to-blue-700 active:scale-98'
@@ -180,8 +193,8 @@ export default function UpdateNotificationModal({ isOpen, onClose, updateInfo, o
                 </>
               ) : (
                 <>
-                  <DownloadCloud className="w-3.5 h-3.5" />
-                  <span>Şimdi Güncelle (v{updateInfo.latestVersion})</span>
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>Otomatik Güncelle (2.9 MB)</span>
                 </>
               )}
             </button>
