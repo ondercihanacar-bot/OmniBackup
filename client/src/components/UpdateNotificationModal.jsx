@@ -23,14 +23,26 @@ export default function UpdateNotificationModal({ isOpen, onClose, updateInfo, o
 
   const handleStartUpdate = async () => {
     setIsUpdating(true);
-    setStatusMessage('Güncelleme paketi doğrulanıyor ve OmniUpdater tetikleniyor...');
+    setStatusMessage('Güncelleme paketi indiriliyor ve OmniUpdater başlatılıyor...');
     setError(null);
 
     try {
       const res = await api.applyUpdate(updateInfo.downloadUrl);
       if (res.success) {
-        setStatusMessage(res.message || 'Güncelleme başladı. Program birkaç saniye içinde yeniden başlatılacak...');
+        setStatusMessage(res.message || 'Güncelleme başladı. Dosyalar yenileniyor, sistem yeniden başlatılıyor...');
         if (onUpdateStarted) onUpdateStarted();
+
+        // Count down and reload interface
+        let countdown = 6;
+        const interval = setInterval(() => {
+          countdown--;
+          if (countdown > 0) {
+            setStatusMessage(`Güncelleme uygulandı! Arayüz ${countdown} saniye içinde yenilenecek...`);
+          } else {
+            clearInterval(interval);
+            window.location.reload();
+          }
+        }, 1000);
       } else {
         setError(res.error || 'Güncelleme başlatılamadı.');
         setIsUpdating(false);
