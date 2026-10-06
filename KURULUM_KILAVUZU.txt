@@ -1,0 +1,25 @@
+===============================================================================
+               OMNIBACKUP ENTERPRISE CYBER VAULT - KULLANIM KILAVUZU
+===============================================================================
+
+1. PROGRAMI BASLATMA:
+   - Masaustunuzde olusan "OmniBackup Cyber Vault" kisayoluna cift tiklayiniz.
+   - Veya klasor icindeki "KURULUM_VE_BASLAT.bat" dosyasini calistiriniz.
+   - Otomatik olarak tarayicinizda http://localhost:3060 acilacaktir.
+
+2. PROGRAMI DURDURMA:
+   - "scripts\stop.bat" dosyasina cift tiklayarak arka plan servisini sonlandirabilirsiniz.
+
+3. BASKA BIR BILGISAYARA KURULUM / TEST:
+   - Bu "OmniBackup" klasorunu bir USB bellege veya baska bir bilgisayara kopyalayiniz.
+   - Hedef bilgisayarda Node.js yuklu degilse https://nodejs.org adresinden yukleyiniz.
+   - Klasordeki "KURULUM_VE_BASLAT.bat" dosyasini calistiriniz.
+   - Kurulum otomatik olarak tamamlanacak, masaustune kisayol atilacak ve program acilacaktir.
+
+4. YEDEKLEME VE KURTARMA YETENEKLERI:
+   - Gercek Dosya / Klasor Yedekleme (VSS Snapshot destegi)
+   - MSSQL & MySQL Veritabani Yedekleme ve SQL Studio
+   - Google Drive ve Ag Klasoru (NAS/SMB) Senkronizasyonu
+   - AES-256 Sifreleme ve SHA-256 Guvenlik Saglamasi
+   - Canli 6 Asamali Telemetri ve Geri Yukleme Merkezi
+===============================================================================

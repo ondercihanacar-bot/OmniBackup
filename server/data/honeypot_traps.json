@@ -1,0 +1,104 @@
+{
+  "globalStatus": {
+    "sentryActive": true,
+    "protectionMode": "Auto-Isolate & Kill",
+    "totalTraps": 24,
+    "activeLures": 24,
+    "compromisedLures": 0,
+    "tamperLatencyMs": 11.4,
+    "lastHealthCheck": "2026-10-03T23:11:50.081Z"
+  },
+  "decoys": [
+    {
+      "id": "decoy-01",
+      "path": "C:\\Shares\\Accounting\\~$2026_Q3_Financial_Audit.xlsx",
+      "type": "Office Excel Decoy",
+      "status": "armed",
+      "lastAudit": "Bugün 01:50"
+    },
+    {
+      "id": "decoy-02",
+      "path": "D:\\Database_Backups\\_z_vault_master_keys.kdbx",
+      "type": "KeyVault Container Lure",
+      "status": "armed",
+      "lastAudit": "Bugün 01:50"
+    },
+    {
+      "id": "decoy-03",
+      "path": "E:\\HumanResources\\Confidential_Salaries_2026.docx",
+      "type": "Office Word Decoy",
+      "status": "armed",
+      "lastAudit": "Bugün 01:50"
+    },
+    {
+      "id": "decoy-04",
+      "path": "\\\\NAS-PRIMARY\\Engineering\\~cad_blueprints_v9.dwg",
+      "type": "SMB Network Lure",
+      "status": "armed",
+      "lastAudit": "Bugün 01:50"
+    },
+    {
+      "id": "decoy-05",
+      "path": "C:\\Users\\Public\\Documents\\~sql_credentials.bak",
+      "type": "SQL Backup Trap",
+      "status": "armed",
+      "lastAudit": "Bugün 01:50"
+    }
+  ],
+  "incidents": [
+    {
+      "id": "inc-1791121767611",
+      "timestamp": "2026-10-04T13:49:27.611Z",
+      "decoyPath": "C:\\Shares\\Accounting\\~$2026_Q3_Financial_Audit.xlsx",
+      "processName": "ransom_sim_wannacry3_test.exe (PID: 9184)",
+      "actionTaken": "Process Killed (9.2ms) -> Network Isolated -> Snapshot Rollback Ready",
+      "status": "Neutralized & Quarantined",
+      "severity": "CRITICAL"
+    },
+    {
+      "id": "inc-1791069775972",
+      "timestamp": "2026-10-03T23:22:55.972Z",
+      "decoyPath": "C:\\Shares\\Accounting\\~$2026_Q3_Financial_Audit.xlsx",
+      "processName": "ransom_sim_wannacry3_test.exe (PID: 9184)",
+      "actionTaken": "Process Killed (9.2ms) -> Network Isolated -> Snapshot Rollback Ready",
+      "status": "Neutralized & Quarantined",
+      "severity": "CRITICAL"
+    },
+    {
+      "id": "inc-1791069521810",
+      "timestamp": "2026-10-03T23:18:41.810Z",
+      "decoyPath": "C:\\Shares\\Accounting\\~$2026_Q3_Financial_Audit.xlsx",
+      "processName": "ransom_sim_wannacry3_test.exe (PID: 9184)",
+      "actionTaken": "Process Killed (9.2ms) -> Network Isolated -> Snapshot Rollback Ready",
+      "status": "Neutralized & Quarantined",
+      "severity": "CRITICAL"
+    },
+    {
+      "id": "inc-1791069142972",
+      "timestamp": "2026-10-03T23:12:22.972Z",
+      "decoyPath": "C:\\Shares\\Accounting\\~$2026_Q3_Financial_Audit.xlsx",
+      "processName": "ransom_sim_wannacry3_test.exe (PID: 9184)",
+      "actionTaken": "Process Killed (9.2ms) -> Network Isolated -> Snapshot Rollback Ready",
+      "status": "Neutralized & Quarantined",
+      "severity": "CRITICAL"
+    },
+    {
+      "id": "inc-1791069110090",
+      "timestamp": "2026-10-03T23:11:50.090Z",
+      "decoyPath": "C:\\Shares\\Accounting\\~$2026_Q3_Financial_Audit.xlsx",
+      "processName": "ransom_sim_wannacry3_test.exe (PID: 9184)",
+      "actionTaken": "Process Killed (9.2ms) -> Network Isolated -> Snapshot Rollback Ready",
+      "status": "Neutralized & Quarantined",
+      "severity": "CRITICAL"
+    },
+    {
+      "id": "inc-sim-101",
+      "timestamp": "2026-09-29T16:22:10Z",
+      "decoyPath": "D:\\TestShare\\~fake_passwords.txt",
+      "processName": "unknown_payload_77x.exe",
+      "actionTaken": "Process Terminated & Host Isolated (8ms)",
+      "status": "Neutralized",
+      "severity": "CRITICAL"
+    }
+  ]
+}

@@ -1,0 +1,248 @@
+{
+  "sessions": [
+    {
+      "id": "session-default",
+      "title": "Genel Sistem Kurtarma & Analiz",
+      "createdAt": "2026-10-03T23:11:50.028Z",
+      "messages": [
+        {
+          "id": "msg-1",
+          "sender": "assistant",
+          "text": "Merhaba! Ben OmniAI Kurtarma Asistanı. Doğal dilde sorgu yazarak yedekleri analiz edebilir, anında geri yükleme planları oluşturabilir veya felaket senaryoları simüle edebilirsiniz. Nasıl yardımcı olabilirim?",
+          "timestamp": "2026-10-03T22:11:50.028Z",
+          "suggestedActions": [
+            "Son 2 saatteki SQL veritabanı yedeğini doğrula",
+            "Kritik sanal makineler için RTO/RPO analizi yap",
+            "Fidye yazılımı honeypot alarmlarını kontrol et",
+            "Site Failover tatbikatı için senaryo hazırla"
+          ]
+        },
+        {
+          "id": "msg-1791069110036",
+          "sender": "user",
+          "text": "Son 2 saatteki SQL veritabanı yedeğini test ortamına yükle",
+          "timestamp": "2026-10-03T23:11:50.036Z"
+        },
+        {
+          "id": "msg-1791069110037",
+          "sender": "assistant",
+          "text": "SQL Veritabanı analizi tamamlandı. [SRV-MSSQL-PROD / DB_ERP_2026] için son 15 dakikalık CDP log snapshot bulundu. Bütünlük doğrulaması (SHA-256) başarılı. Geri yükleme sandbox ortamında 45 saniyede ayağa kaldırılabilir.",
+          "intent": "db_restore",
+          "executionPlan": {
+            "target": "SRV-MSSQL-PROD (DB_ERP_2026)",
+            "restorePoint": "Bugün 01:45 (CDP Snapshot #8492)",
+            "estimatedTime": "45 sn (Instant Mount)",
+            "mode": "Isolated Sandbox / Staging Test",
+            "safeScore": 99.8
+          },
+          "suggestedActions": [
+            "Test Ortamına Canlı Mount Et",
+            "Hedef Sunucuya Overwrite Restore Yap",
+            "Point-in-Time Tablo Düzeyinde İncele"
+          ],
+          "timestamp": "2026-10-03T23:11:50.036Z"
+        },
+        {
+          "id": "msg-1791069142960",
+          "sender": "user",
+          "text": "Son 2 saatteki SQL veritabanı yedeğini test ortamına yükle",
+          "timestamp": "2026-10-03T23:12:22.960Z"
+        },
+        {
+          "id": "msg-1791069142962",
+          "sender": "assistant",
+          "text": "SQL Veritabanı analizi tamamlandı. [SRV-MSSQL-PROD / DB_ERP_2026] için son 15 dakikalık CDP log snapshot bulundu. Bütünlük doğrulaması (SHA-256) başarılı. Geri yükleme sandbox ortamında 45 saniyede ayağa kaldırılabilir.",
+          "intent": "db_restore",
+          "executionPlan": {
+            "target": "SRV-MSSQL-PROD (DB_ERP_2026)",
+            "restorePoint": "Bugün 01:45 (CDP Snapshot #8492)",
+            "estimatedTime": "45 sn (Instant Mount)",
+            "mode": "Isolated Sandbox / Staging Test",
+            "safeScore": 99.8
+          },
+          "suggestedActions": [
+            "Test Ortamına Canlı Mount Et",
+            "Hedef Sunucuya Overwrite Restore Yap",
+            "Point-in-Time Tablo Düzeyinde İncele"
+          ],
+          "timestamp": "2026-10-03T23:12:22.961Z"
+        },
+        {
+          "id": "msg-1791069429375",
+          "sender": "user",
+          "text": "Finans-SQL sunucusunun en son transaction log yedeğini test ortamına yükle",
+          "timestamp": "2026-10-03T23:17:09.375Z"
+        },
+        {
+          "id": "msg-1791069429376",
+          "sender": "assistant",
+          "text": "SQL Veritabanı analizi tamamlandı. [SRV-MSSQL-PROD / DB_ERP_2026] için son 15 dakikalık CDP log snapshot bulundu. Bütünlük doğrulaması (SHA-256) başarılı. Geri yükleme sandbox ortamında 45 saniyede ayağa kaldırılabilir.",
+          "intent": "db_restore",
+          "executionPlan": {
+            "target": "SRV-MSSQL-PROD (DB_ERP_2026)",
+            "restorePoint": "Bugün 01:45 (CDP Snapshot #8492)",
+            "estimatedTime": "45 sn (Instant Mount)",
+            "mode": "Isolated Sandbox / Staging Test",
+            "safeScore": 99.8
+          },
+          "suggestedActions": [
+            "Test Ortamına Canlı Mount Et",
+            "Hedef Sunucuya Overwrite Restore Yap",
+            "Point-in-Time Tablo Düzeyinde İncele"
+          ],
+          "timestamp": "2026-10-03T23:17:09.375Z"
+        },
+        {
+          "id": "msg-1791069431777",
+          "sender": "user",
+          "text": "Tüm kritik servislerin RPO ve RTO uyumluluk durumunu listele",
+          "timestamp": "2026-10-03T23:17:11.777Z"
+        },
+        {
+          "id": "msg-1791069431778",
+          "sender": "assistant",
+          "text": "SLA Uyumluluk Değerlendirmesi: Toplam 42 kritik sunucudan 40 tanesi hedeflenen 15 dk RPO ve 5 dk RTO eşiğine %100 uyumlu. 2 adet uzak ofis NAS yedeğinde WAN bant genişliği sınırlaması nedeniyle RPO 28 dakikaya uzadı. WAN Hızlandırıcı ve Deduplikasyon optimizasyonu önerilmektedir.",
+          "intent": "sla_analysis",
+          "executionPlan": {
+            "target": "Enterprise Fleet (42 VM & DB)",
+            "slaCompliance": "95.2%",
+            "currentAvgRpo": "4.2 Dakika",
+            "currentAvgRto": "2.8 Dakika",
+            "criticalAlerts": 0
+          },
+          "suggestedActions": [
+            "WAN Hızlandırmayı Devreye Al",
+            "Uzak Ofis Yedeklerini Önceliklendir",
+            "PDF SLA Raporu İndir"
+          ],
+          "timestamp": "2026-10-03T23:17:11.777Z"
+        },
+        {
+          "id": "msg-1791069432633",
+          "sender": "user",
+          "text": "Son 24 saatteki değişen blok oranlarını ve şifreleme anomalilerini incele",
+          "timestamp": "2026-10-03T23:17:12.633Z"
+        },
+        {
+          "id": "msg-1791069432634",
+          "sender": "assistant",
+          "text": "Fidye Yazılımı Güvenlik Taraması: 18 Honeypot yem dosyasında herhangi bir yetkisiz şifreleme veya uzantı modifikasyonu tespit edilmedi. Değişen blok entropi seviyesi %1.2 (Normal). İmmutable (Değiştirilemez) WORM Air-Gap depolama 32 gündür kilitli ve güvende.",
+          "intent": "threat_defense",
+          "executionPlan": {
+            "threatLevel": "GÜVENLİ (CLEAN)",
+            "honeypotActiveSentry": 18,
+            "entropyStatus": "Stabil (< 3.0 Normal)",
+            "wormLockStatus": "Active WORM (Değiştirilemez)"
+          },
+          "suggestedActions": [
+            "Honeypot Tuzaklarını Yenile",
+            "Air-Gap Anlık Karantina Testi Başlat",
+            "Immutable Snapshot Kilidini Doğrula"
+          ],
+          "timestamp": "2026-10-03T23:17:12.633Z"
+        },
+        {
+          "id": "msg-1791069433530",
+          "sender": "user",
+          "text": "Production clusterindeki ecommerce-db PVC snapshotını geri yükle",
+          "timestamp": "2026-10-03T23:17:13.530Z"
+        },
+        {
+          "id": "msg-1791069433531",
+          "sender": "assistant",
+          "text": "Kubernetes Cluster Durumu: k8s-prod-cluster-01 üzerinde 6 Namespace, 24 PVC ve 8 Helm sürümü izleniyor. Son başarılı etcd + PVC snapshot 20 dakika önce alındı.",
+          "intent": "k8s_restore",
+          "executionPlan": {
+            "cluster": "k8s-prod-cluster-01",
+            "namespaces": [
+              "default",
+              "production",
+              "database",
+              "ingress"
+            ],
+            "pvcCount": 24,
+            "lastSnapshot": "20 dk önce"
+          },
+          "suggestedActions": [
+            "Namespace Bazlı Kurtarma Başlat",
+            "Helm Chart State İndir",
+            "PVC Verisini Staging Clustere Klonla"
+          ],
+          "timestamp": "2026-10-03T23:17:13.530Z"
+        },
+        {
+          "id": "msg-1791069775953",
+          "sender": "user",
+          "text": "Son 2 saatteki SQL veritabanı yedeğini test ortamına yükle",
+          "timestamp": "2026-10-03T23:22:55.953Z"
+        },
+        {
+          "id": "msg-1791069775954",
+          "sender": "assistant",
+          "text": "SQL Veritabanı analizi tamamlandı. [SRV-MSSQL-PROD / DB_ERP_2026] için son 15 dakikalık CDP log snapshot bulundu. Bütünlük doğrulaması (SHA-256) başarılı. Geri yükleme sandbox ortamında 45 saniyede ayağa kaldırılabilir.",
+          "intent": "db_restore",
+          "executionPlan": {
+            "target": "SRV-MSSQL-PROD (DB_ERP_2026)",
+            "restorePoint": "Bugün 01:45 (CDP Snapshot #8492)",
+            "estimatedTime": "45 sn (Instant Mount)",
+            "mode": "Isolated Sandbox / Staging Test",
+            "safeScore": 99.8
+          },
+          "suggestedActions": [
+            "Test Ortamına Canlı Mount Et",
+            "Hedef Sunucuya Overwrite Restore Yap",
+            "Point-in-Time Tablo Düzeyinde İncele"
+          ],
+          "timestamp": "2026-10-03T23:22:55.953Z"
+        },
+        {
+          "id": "msg-1791121767593",
+          "sender": "user",
+          "text": "Son 2 saatteki SQL veritabanı yedeğini test ortamına yükle",
+          "timestamp": "2026-10-04T13:49:27.593Z"
+        },
+        {
+          "id": "msg-1791121767594",
+          "sender": "assistant",
+          "text": "SQL Veritabanı analizi tamamlandı. [SRV-MSSQL-PROD / DB_ERP_2026] için son 15 dakikalık CDP log snapshot bulundu. Bütünlük doğrulaması (SHA-256) başarılı. Geri yükleme sandbox ortamında 45 saniyede ayağa kaldırılabilir.",
+          "intent": "db_restore",
+          "executionPlan": {
+            "target": "SRV-MSSQL-PROD (DB_ERP_2026)",
+            "restorePoint": "Bugün 01:45 (CDP Snapshot #8492)",
+            "estimatedTime": "45 sn (Instant Mount)",
+            "mode": "Isolated Sandbox / Staging Test",
+            "safeScore": 99.8
+          },
+          "suggestedActions": [
+            "Test Ortamına Canlı Mount Et",
+            "Hedef Sunucuya Overwrite Restore Yap",
+            "Point-in-Time Tablo Düzeyinde İncele"
+          ],
+          "timestamp": "2026-10-04T13:49:27.593Z"
+        }
+      ]
+    }
+  ],
+  "quickPrompts": [
+    {
+      "id": "qp-1",
+      "label": "SQL DB Hızlı Kurtarma",
+      "prompt": "Finans-SQL sunucusunun en son transaction log yedeğini test ortamına yükle"
+    },
+    {
+      "id": "qp-2",
+      "label": "RPO/RTO Sağlık Raporu",
+      "prompt": "Tüm kritik servislerin RPO ve RTO uyumluluk durumunu listele"
+    },
+    {
+      "id": "qp-3",
+      "label": "Zero-Day Tehdit Kontrolü",
+      "prompt": "Son 24 saatteki değişen blok oranlarını ve şifreleme anomalilerini incele"
+    },
+    {
+      "id": "qp-4",
+      "label": "Kubernetes PVC Geri Dönüş",
+      "prompt": "Production clusterindeki ecommerce-db PVC snapshotını geri yükle"
+    }
+  ]
+}

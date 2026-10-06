@@ -1,0 +1,19 @@
+{
+  "name": "omnibackup",
+  "version": "1.0.0",
+  "description": "OmniBackup - Kurumsal Merkezi Windows Sunucu, İstemci ve SQL Yedekleme Sistemi",
+  "author": "Önder Cihan ACAR",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "install:all": "npm install && cd server && npm install && cd ../client && npm install",
+    "server": "node server/index.js",
+    "client": "npm --prefix client run dev",
+    "build:client": "npm --prefix client run build",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "start": "node server/index.js"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

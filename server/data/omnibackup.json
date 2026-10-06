@@ -1,0 +1,674 @@
+{
+  "settings": {
+    "serverName": "OmniBackup Central Master",
+    "serverPort": 3060,
+    "encryptionEnabled": false,
+    "defaultEncryptionKey": "",
+    "defaultStoragePath": "C:\\OmniBackups",
+    "retentionDaysDefault": 30,
+    "compressionLevel": "high",
+    "notifications": {
+      "telegram": {
+        "enabled": false,
+        "botToken": "",
+        "chatId": ""
+      },
+      "discord": {
+        "enabled": false,
+        "webhookUrl": ""
+      },
+      "email": {
+        "enabled": false,
+        "smtpHost": "",
+        "smtpPort": 587,
+        "smtpUser": "",
+        "smtpPass": "",
+        "toEmail": ""
+      },
+      "notifyOnSuccess": true,
+      "notifyOnError": true
+    }
+  },
+  "jobs": [
+    {
+      "id": "job-sql-prod",
+      "name": "MSSQL - ERP & Muhasebe Veritabanı Yedeği",
+      "type": "sql",
+      "sqlType": "mssql",
+      "serverAddress": "127.0.0.1",
+      "instanceName": "MSSQLSERVER",
+      "authType": "windows",
+      "username": "sa",
+      "password": "",
+      "databaseName": "ERP_PROD_DB",
+      "backupType": "full",
+      "sourcePath": "",
+      "destinationId": "dest-local",
+      "schedule": "0 23 * * *",
+      "scheduleHuman": "Her gün 23:00'da",
+      "retentionDays": 14,
+      "compress": true,
+      "encrypt": false,
+      "useVss": false,
+      "status": "idle",
+      "lastRun": "2026-10-05T20:04:35.833Z",
+      "lastStatus": "success",
+      "lastSize": "721 Bytes",
+      "lastDuration": "3 sn",
+      "enabled": true,
+      "agentId": "agent-srv-01"
+    },
+    {
+      "id": "job-user-docs",
+      "name": "Muhasebe & Finans Ortak Klasör Yedeği",
+      "type": "files",
+      "sourcePath": "C:\\SirketBelgeleri\\Muhasebe",
+      "destinationId": "dest-nas",
+      "schedule": "0 22 * * *",
+      "scheduleHuman": "Her gün 22:00'da",
+      "retentionDays": 30,
+      "compress": true,
+      "encrypt": true,
+      "useVss": true,
+      "status": "idle",
+      "lastRun": "2026-10-03T22:49:15.819Z",
+      "lastStatus": "success",
+      "lastSize": "4.85 GB",
+      "lastDuration": "2 dk 15 sn",
+      "enabled": true,
+      "agentId": "agent-srv-01"
+    },
+    {
+      "id": "job-ceo-laptop",
+      "name": "Yönetim PC - Masaüstü & Belgeler",
+      "type": "files",
+      "sourcePath": "C:\\Users\\Yonetim\\Documents",
+      "destinationId": "dest-local",
+      "schedule": "0 18 * * 1-5",
+      "scheduleHuman": "Hafta içi her gün 18:00'da",
+      "retentionDays": 7,
+      "compress": true,
+      "encrypt": false,
+      "useVss": true,
+      "status": "idle",
+      "lastRun": "2026-10-03T18:49:15.819Z",
+      "lastStatus": "success",
+      "lastSize": "840 MB",
+      "lastDuration": "42 sn",
+      "enabled": true,
+      "agentId": "agent-pc-02"
+    }
+  ],
+  "agents": [
+    {
+      "id": "agent-srv-01",
+      "hostname": "SRV-APP-DB-01",
+      "ipAddress": "192.168.1.10",
+      "os": "Windows Server 2022 Datacenter",
+      "version": "v1.4.0",
+      "status": "online",
+      "lastSeen": "2026-10-04T13:49:15.819Z",
+      "cpuUsage": "12%",
+      "ramUsage": "6.4 GB / 32 GB",
+      "diskFree": "420 GB / 1 TB",
+      "role": "Database & File Server",
+      "tags": [
+        "Sunucu",
+        "MSSQL",
+        "VSS Active"
+      ]
+    },
+    {
+      "id": "agent-pc-02",
+      "hostname": "PC-YONETIM-01",
+      "ipAddress": "192.168.1.55",
+      "os": "Windows 11 Pro 64-bit",
+      "version": "v1.4.0",
+      "status": "online",
+      "lastSeen": "2026-10-04T13:49:15.819Z",
+      "cpuUsage": "4%",
+      "ramUsage": "5.1 GB / 16 GB",
+      "diskFree": "185 GB / 512 GB",
+      "role": "Client PC (Yönetim)",
+      "tags": [
+        "İstemci",
+        "VSS Active"
+      ]
+    },
+    {
+      "id": "agent-pc-03",
+      "hostname": "PC-MUHASEBE-03",
+      "ipAddress": "192.168.1.82",
+      "os": "Windows 10 Pro 64-bit",
+      "version": "v1.3.8",
+      "status": "online",
+      "lastSeen": "2026-10-04T13:49:15.819Z",
+      "cpuUsage": "9%",
+      "ramUsage": "4.8 GB / 16 GB",
+      "diskFree": "92 GB / 256 GB",
+      "role": "Client PC (Muhasebe)",
+      "tags": [
+        "İstemci",
+        "Outlook PST"
+      ]
+    }
+  ],
+  "destinations": [
+    {
+      "id": "dest-local",
+      "name": "Yerel Yedekleme Diski (D:\\Backups)",
+      "type": "local",
+      "path": "D:\\OmniBackups",
+      "isDefault": true,
+      "totalSpace": "2000 GB",
+      "usedSpace": "420 GB",
+      "freeSpace": "1580 GB",
+      "status": "active"
+    },
+    {
+      "id": "dest-nas",
+      "name": "Synology NAS Ağ Paylaşımı (SMB)",
+      "type": "smb",
+      "path": "\\\\192.168.1.250\\BackupVault\\OmniBackup",
+      "username": "backup_admin",
+      "isDefault": false,
+      "totalSpace": "8000 GB",
+      "usedSpace": "2450 GB",
+      "freeSpace": "5550 GB",
+      "status": "active"
+    },
+    {
+      "id": "dest-s3",
+      "name": "Amazon S3 / MinIO Cloud Bucket",
+      "type": "s3",
+      "path": "s3://corp-backup-vault-2026/production",
+      "endpoint": "https://s3.eu-central-1.amazonaws.com",
+      "bucket": "corp-backup-vault-2026",
+      "isDefault": false,
+      "status": "ready"
+    },
+    {
+      "id": "dest-1791124450787",
+      "name": "D Sürücüsü Yedek Havuzu",
+      "type": "local",
+      "path": "D:\\OmniBackups",
+      "username": "",
+      "endpoint": "",
+      "bucket": "",
+      "isDefault": false,
+      "totalSpace": "1000 GB",
+      "usedSpace": "0 GB",
+      "freeSpace": "1000 GB",
+      "status": "active"
+    }
+  ],
+  "history": [
+    {
+      "id": "hist-1791230675830",
+      "jobId": "job-sql-prod",
+      "jobName": "MSSQL - ERP & Muhasebe Veritabanı Yedeği",
+      "agentName": "agent-srv-01",
+      "type": "sql",
+      "status": "success",
+      "startTime": "2026-10-05T20:04:32.176Z",
+      "endTime": "2026-10-05T20:04:35.830Z",
+      "duration": "3 sn",
+      "size": "721 Bytes",
+      "fileName": "MSSQL_ERP_PROD_DB_FULL_2026-10-05T20-04-32_prod_hs9l.bak.zip",
+      "destination": "Yerel Yedekleme Diski (D:\\Backups)",
+      "targetFilePath": "C:\\Users\\Onder\\OmniBackups\\MSSQL_ERP_PROD_DB_FULL_2026-10-05T20-04-32_prod_hs9l.bak.zip",
+      "encrypted": false,
+      "compressed": true,
+      "vssUsed": false,
+      "isImmutable": false,
+      "immutableUntil": null,
+      "isVerified": true,
+      "logMessage": "MSSQL [ERP_PROD_DB] FULL yedeği başarıyla alındı ve SHA-256 / WITH CHECKSUM ile doğrulandı."
+    },
+    {
+      "id": "hist-1791122404090",
+      "jobId": "job-1791052463826",
+      "jobName": "Yeni Koruma Planı (1)",
+      "agentName": "agent-srv-01",
+      "type": "sql",
+      "status": "success",
+      "startTime": "2026-10-04T14:00:00.395Z",
+      "endTime": "2026-10-04T14:00:04.090Z",
+      "duration": "3 sn",
+      "size": "718 Bytes",
+      "fileName": "MSSQL_ERP_PROD_DB_FULL_2026-10-04T14-00-00_3826_159k.bak.zip",
+      "destination": "Google Drive Bulut Havuzu (G:\\ Sürücüsü)",
+      "targetFilePath": "gdrive://OmniBackup/MSSQL_ERP_PROD_DB_FULL_2026-10-04T14-00-00_3826_159k.bak.zip",
+      "encrypted": true,
+      "compressed": true,
+      "vssUsed": true,
+      "isImmutable": false,
+      "immutableUntil": null,
+      "isVerified": true,
+      "logMessage": "MSSQL [ERP_PROD_DB] FULL yedeği başarıyla alındı ve SHA-256 / WITH CHECKSUM ile doğrulandı."
+    },
+    {
+      "id": "hist-001",
+      "jobId": "job-sql-prod",
+      "jobName": "MSSQL - ERP & Muhasebe Veritabanı Yedeği",
+      "agentName": "SRV-APP-DB-01",
+      "type": "sql",
+      "status": "success",
+      "startTime": "2026-10-03T23:49:15.819Z",
+      "endTime": "2026-10-03T23:49:49.819Z",
+      "duration": "34 sn",
+      "size": "1.42 GB",
+      "fileName": "MSSQL_ERP_PROD_DB_FULL_20261002_090000.bak.zip",
+      "destination": "Yerel Yedekleme Diski (D:\\Backups)",
+      "targetFilePath": "D:\\OmniBackups\\MSSQL_ERP_PROD_DB_FULL_20261002_090000.bak.zip",
+      "encrypted": false,
+      "compressed": true,
+      "vssUsed": false,
+      "logMessage": "MSSQL Full backup başarıyla tamamlandı. 1.42 GB arşiv oluşturuldu."
+    },
+    {
+      "id": "hist-002",
+      "jobId": "job-user-docs",
+      "jobName": "Muhasebe & Finans Ortak Klasör Yedeği",
+      "agentName": "SRV-APP-DB-01",
+      "type": "files",
+      "status": "success",
+      "startTime": "2026-10-03T22:49:15.819Z",
+      "endTime": "2026-10-03T22:51:30.819Z",
+      "duration": "2 dk 15 sn",
+      "size": "4.85 GB",
+      "fileName": "Muhasebe_Files_20261002_080000.enc.zip",
+      "destination": "Synology NAS Ağ Paylaşımı (SMB)",
+      "targetFilePath": "\\\\192.168.1.250\\BackupVault\\OmniBackup\\Muhasebe_Files_20261002_080000.enc.zip",
+      "encrypted": true,
+      "compressed": true,
+      "vssUsed": true,
+      "logMessage": "VSS Gölge Kopyası (Shadow Copy) alındı. 8,420 dosya AES-256 ile şifrelenerek yedeklendi."
+    },
+    {
+      "id": "hist-003",
+      "jobId": "job-ceo-laptop",
+      "jobName": "Yönetim PC - Masaüstü & Belgeler",
+      "agentName": "PC-YONETIM-01",
+      "type": "files",
+      "status": "success",
+      "startTime": "2026-10-03T18:49:15.819Z",
+      "endTime": "2026-10-03T18:49:57.819Z",
+      "duration": "42 sn",
+      "size": "840 MB",
+      "fileName": "Yonetim_PC_Docs_20261002_040000.zip",
+      "destination": "Yerel Yedekleme Diski (D:\\Backups)",
+      "targetFilePath": "D:\\OmniBackups\\Yonetim_PC_Docs_20261002_040000.zip",
+      "encrypted": false,
+      "compressed": true,
+      "vssUsed": true,
+      "logMessage": "Açık Outlook .pst ve Excel dosyaları VSS ile kilitlenmeden yedeklendi."
+    }
+  ],
+  "logs": [
+    {
+      "id": "log-1791230675894-885",
+      "timestamp": "2026-10-05T20:04:35.894Z",
+      "level": "success",
+      "source": "JobRunner",
+      "message": "'MSSQL - ERP & Muhasebe Veritabanı Yedeği' başarıyla tamamlandı (721 Bytes, 3 sn)."
+    },
+    {
+      "id": "log-1791230672214-711",
+      "timestamp": "2026-10-05T20:04:32.214Z",
+      "level": "warning",
+      "source": "Storage",
+      "message": "Hedef dizine erişilemedi (D:\\OmniBackups), yedek 'C:\\Users\\Onder\\OmniBackups' konumuna yönlendirildi."
+    },
+    {
+      "id": "log-1791230672197-504",
+      "timestamp": "2026-10-05T20:04:32.197Z",
+      "level": "info",
+      "source": "JobRunner",
+      "message": "'MSSQL - ERP & Muhasebe Veritabanı Yedeği' yedeği başlatıldı."
+    },
+    {
+      "id": "log-1791230658443-132",
+      "timestamp": "2026-10-05T20:04:18.443Z",
+      "level": "success",
+      "source": "Auth",
+      "message": "Yetkilendirme doğrulaması başarılı (admin) [2FA]."
+    },
+    {
+      "id": "log-1791132937234-658",
+      "timestamp": "2026-10-04T16:55:37.234Z",
+      "level": "warning",
+      "source": "Jobs",
+      "message": "Görev silindi: 'Muhasebe Test Plani'"
+    },
+    {
+      "id": "log-1791132928801-167",
+      "timestamp": "2026-10-04T16:55:28.801Z",
+      "level": "info",
+      "source": "Jobs",
+      "message": "Yeni yedekleme görevi oluşturuldu: 'Muhasebe Test Plani'"
+    },
+    {
+      "id": "log-1791124450795-864",
+      "timestamp": "2026-10-04T14:34:10.795Z",
+      "level": "info",
+      "source": "Storage",
+      "message": "Yeni depolama hedefi eklendi: D Sürücüsü Yedek Havuzu (D:\\OmniBackups)"
+    },
+    {
+      "id": "log-1791124440768-303",
+      "timestamp": "2026-10-04T14:34:00.768Z",
+      "level": "info",
+      "source": "Explorer",
+      "message": "Yeni depolama klasörü oluşturuldu: D:\\OmniBackups"
+    },
+    {
+      "id": "log-1791122404153-303",
+      "timestamp": "2026-10-04T14:00:04.153Z",
+      "level": "success",
+      "source": "JobRunner",
+      "message": "'Yeni Koruma Planı (1)' başarıyla tamamlandı (718 Bytes, 3 sn)."
+    },
+    {
+      "id": "log-1791122404088-226",
+      "timestamp": "2026-10-04T14:00:04.088Z",
+      "level": "success",
+      "source": "GoogleDrive",
+      "message": "Google Drive bulut aktarımı tamamlandı. Yerel geçici tampon temizlendi (0 Bayt disk harcandı)."
+    },
+    {
+      "id": "log-1791122404067-700",
+      "timestamp": "2026-10-04T14:00:04.067Z",
+      "level": "info",
+      "source": "GoogleDrive",
+      "message": "'MSSQL_ERP_PROD_DB_FULL_2026-10-04T14-00-00_3826_159k.bak.zip' doğrudan Google Drive bulutuna aktarılıyor (Zero Local Storage)..."
+    },
+    {
+      "id": "log-1791122400489-520",
+      "timestamp": "2026-10-04T14:00:00.489Z",
+      "level": "info",
+      "source": "Scheduler",
+      "message": "Zamanlanmış görev tetiklendi: 'Yeni Koruma Planı (1)'"
+    },
+    {
+      "id": "log-1",
+      "timestamp": "2026-10-04T13:49:15.819Z",
+      "level": "info",
+      "source": "Engine",
+      "message": "OmniBackup Master Engine başlatıldı. Zamanlayıcı aktif (3 aktif görev)."
+    },
+    {
+      "id": "log-2",
+      "timestamp": "2026-10-04T13:44:15.819Z",
+      "level": "success",
+      "source": "Agent-Server",
+      "message": "Ajan 'SRV-APP-DB-01' (192.168.1.10) periyodik durum bildirimini gönderdi. Durum: Normal."
+    },
+    {
+      "id": "log-3",
+      "timestamp": "2026-10-04T13:41:15.819Z",
+      "level": "info",
+      "source": "Storage",
+      "message": "Depolama alanı '\\\\192.168.1.250\\BackupVault' erişim kontrolü yapıldı: OK (5.55 TB boş)."
+    }
+  ],
+  "license": {
+    "status": "TRIAL",
+    "tier": "TRIAL_15_DAYS",
+    "tierName": "15 Günlük Tam Yetkili Demo Sürümü",
+    "hardwareId": "OMNI-HWID-F340-2E73-DD3A",
+    "licenseKey": "",
+    "licensedTo": "OmniBackup Değerlendirme Kullanıcısı",
+    "company": "Deneme / POC Kurulumu",
+    "installedAt": "2026-10-04T14:00:45.988Z",
+    "trialExpiresAt": "2026-10-19T14:00:45.988Z",
+    "activatedAt": null,
+    "expiresAt": "2026-10-19T14:00:45.988Z",
+    "omniHubConnected": false,
+    "omniHubServerUrl": "http://127.0.0.1:5200",
+    "maxAgents": "Sınırsız (Demo)",
+    "maxSqlDatabases": "Sınırsız (Demo)",
+    "allowedFeatures": [
+      "MSSQL & MySQL Canlı Yedekleme",
+      "VSS Volume Shadow Copy Snapshot",
+      "AES-256 Askeri Kriptolama",
+      "Active Cyber Shield (Ransomware Kalkanı)",
+      "SureBackup Otomatik DR Tatbikatı",
+      "Instant VM Boot (Anında Sanallaştırma)",
+      "WORM Değiştirilemez Yedek Kilidi",
+      "Zstandard & Deduplication Sıkıştırma",
+      "Google Drive & NAS Bulut Aktarımı",
+      "Yerel Ağ Radarı & Ajan Keşfi"
+    ]
+  },
+  "dedupStats": {
+    "totalRawBytes": 1485928372224,
+    "totalStoredBytes": 343597383680,
+    "uniqueChunksCount": 42105,
+    "duplicateChunksFiltered": 182390,
+    "compressionAlgorithm": "Zstandard (zstd-v1.5) + Block Hash SHA-256",
+    "lastOptimizationTime": "2026-10-04T14:30:27.814Z"
+  },
+  "saasTenants": [
+    {
+      "id": "tenant-m365-01",
+      "name": "Kurumsal M365 (sirketiniz.com)",
+      "provider": "microsoft365",
+      "tenantId": "72f988bf-86f1-41af-91ab-2d7cd011db47",
+      "clientId": "omnibackup-app-m365-sec",
+      "status": "CONNECTED",
+      "totalMailboxes": 48,
+      "protectedMailboxes": 48,
+      "totalOneDriveGB": "1420.5 GB",
+      "totalSharePointGB": "890.2 GB",
+      "lastBackupDate": "2026-10-04T12:30:27.838Z",
+      "complianceMode": "LEGAL_HOLD_WORM",
+      "mailboxes": [
+        {
+          "id": "mb-01",
+          "email": "onder@sirketiniz.com",
+          "displayName": "Önder Cihan ACAR (Genel Müdür)",
+          "itemsCount": 38400,
+          "size": "24.8 GB",
+          "lastStatus": "SUCCESS"
+        },
+        {
+          "id": "mb-02",
+          "email": "muhasebe@sirketiniz.com",
+          "displayName": "Finans & Muhasebe",
+          "itemsCount": 52100,
+          "size": "38.2 GB",
+          "lastStatus": "SUCCESS"
+        },
+        {
+          "id": "mb-03",
+          "email": "it-destek@sirketiniz.com",
+          "displayName": "IT Operasyon & Sistem",
+          "itemsCount": 19400,
+          "size": "14.5 GB",
+          "lastStatus": "SUCCESS"
+        },
+        {
+          "id": "mb-04",
+          "email": "ik@sirketiniz.com",
+          "displayName": "İnsan Kaynakları",
+          "itemsCount": 12800,
+          "size": "8.4 GB",
+          "lastStatus": "SUCCESS"
+        }
+      ]
+    },
+    {
+      "id": "tenant-gws-01",
+      "name": "Google Workspace (holding.com.tr)",
+      "provider": "google_workspace",
+      "serviceAccountEmail": "omnibackup-sa@holding.iam.gserviceaccount.com",
+      "status": "CONNECTED",
+      "totalMailboxes": 25,
+      "protectedMailboxes": 25,
+      "totalOneDriveGB": "640.0 GB",
+      "totalSharePointGB": "410.5 GB",
+      "lastBackupDate": "2026-10-04T09:30:27.838Z",
+      "complianceMode": "STANDARD",
+      "mailboxes": [
+        {
+          "id": "gmb-01",
+          "email": "yonetim@holding.com.tr",
+          "displayName": "Yönetim Kurulu",
+          "itemsCount": 29500,
+          "size": "19.2 GB",
+          "lastStatus": "SUCCESS"
+        },
+        {
+          "id": "gmb-02",
+          "email": "pazarlama@holding.com.tr",
+          "displayName": "Pazarlama & İletişim",
+          "itemsCount": 16800,
+          "size": "11.0 GB",
+          "lastStatus": "SUCCESS"
+        }
+      ]
+    }
+  ],
+  "adDeletedObjects": [
+    {
+      "id": "ad-obj-01",
+      "name": "ahmet.yilmaz",
+      "displayName": "Ahmet YILMAZ (Kıdemli Yazılım Geliştirici)",
+      "objectClass": "user",
+      "samAccountName": "ahmet.yilmaz",
+      "userPrincipalName": "ahmet.yilmaz@sirket.local",
+      "distinguishedName": "CN=ahmet.yilmaz,OU=Yazilim,OU=Departmanlar,DC=sirket,DC=local",
+      "deletedAt": "2026-10-04T11:30:27.862Z",
+      "lastKnownParent": "OU=Yazilim,OU=Departmanlar,DC=sirket,DC=local",
+      "objectGuid": "7a12b4e8-4901-44aa-9f01-112233445566",
+      "status": "DELETED",
+      "groups": [
+        "Domain Users",
+        "Developers_Group",
+        "VPN_Access_List"
+      ]
+    },
+    {
+      "id": "ad-obj-02",
+      "name": "Finans_Muhasebe_Yetki_Grubu",
+      "displayName": "Finans & Muhasebe Güvenlik Grubu (Global)",
+      "objectClass": "group",
+      "samAccountName": "Finans_Muhasebe_Yetki_Grubu",
+      "distinguishedName": "CN=Finans_Muhasebe_Yetki_Grubu,OU=Guvenlik_Gruplari,DC=sirket,DC=local",
+      "deletedAt": "2026-10-04T00:30:27.862Z",
+      "lastKnownParent": "OU=Guvenlik_Gruplari,DC=sirket,DC=local",
+      "objectGuid": "9c44dd21-1188-42bb-8e22-998877665544",
+      "status": "DELETED",
+      "groups": []
+    },
+    {
+      "id": "ad-obj-03",
+      "name": "GPO_Sirket_Parola_Politikasi_2026",
+      "displayName": "GPO - Karmaşık Parola & Ekran Kilidi Politikası",
+      "objectClass": "groupPolicyContainer",
+      "distinguishedName": "CN={31B2F340-016D-11D2-945F-00C04FB984F9},CN=Policies,CN=System,DC=sirket,DC=local",
+      "deletedAt": "2026-10-03T12:30:27.862Z",
+      "lastKnownParent": "CN=Policies,CN=System,DC=sirket,DC=local",
+      "objectGuid": "31b2f340-016d-11d2-945f-00c04fb984f9",
+      "status": "DELETED",
+      "groups": []
+    }
+  ],
+  "mspTenants": [
+    {
+      "id": "msp-tenant-01",
+      "name": "Anadolu Lojistik A.Ş.",
+      "contactPerson": "Murat Yılmaz (IT Müdürü)",
+      "contactEmail": "it@anadolulojistik.com",
+      "planType": "MSP Platinum Gold 24/7",
+      "allocatedQuotaGB": 2048,
+      "usedQuotaGB": 684.2,
+      "maxAgents": 15,
+      "activeAgents": 8,
+      "slaTargetPercent": 99.9,
+      "slaAchievedPercent": 100,
+      "totalJobsMonth": 240,
+      "successJobsMonth": 240,
+      "failedJobsMonth": 0,
+      "status": "ACTIVE",
+      "billingCycle": "Aylık",
+      "createdDate": "2026-01-15"
+    },
+    {
+      "id": "msp-tenant-02",
+      "name": "Marmara Sağlık & Poliklinik Grubu",
+      "contactPerson": "Dr. Selin Kaya",
+      "contactEmail": "bilgi@marmarasaglik.com",
+      "planType": "MSP HIPAA/KVKK Sağlık Paketi",
+      "allocatedQuotaGB": 4096,
+      "usedQuotaGB": 1820.5,
+      "maxAgents": 25,
+      "activeAgents": 14,
+      "slaTargetPercent": 99.95,
+      "slaAchievedPercent": 99.98,
+      "totalJobsMonth": 580,
+      "successJobsMonth": 578,
+      "failedJobsMonth": 2,
+      "status": "ACTIVE",
+      "billingCycle": "Yıllık",
+      "createdDate": "2026-02-01"
+    },
+    {
+      "id": "msp-tenant-03",
+      "name": "Ege Resort Oteller Zinciri",
+      "contactPerson": "Caner Demir (Sistem Yöneticisi)",
+      "contactEmail": "teknik@egeresort.com",
+      "planType": "MSP Standart Business",
+      "allocatedQuotaGB": 1024,
+      "usedQuotaGB": 340,
+      "maxAgents": 10,
+      "activeAgents": 4,
+      "slaTargetPercent": 99.5,
+      "slaAchievedPercent": 100,
+      "totalJobsMonth": 120,
+      "successJobsMonth": 120,
+      "failedJobsMonth": 0,
+      "status": "ACTIVE",
+      "billingCycle": "Aylık",
+      "createdDate": "2026-03-10"
+    }
+  ],
+  "keyVault": {
+    "vaultStatus": "LOCKED_ENCRYPTED",
+    "vaultAlgorithm": "AES-256-GCM + PBKDF2 (100,000 Iterations)",
+    "lastEscrowExport": "2026-09-27T14:30:27.900Z",
+    "keys": [
+      {
+        "id": "key-01",
+        "jobName": "MSSQL - ERP & Muhasebe Veritabanı Yedeği",
+        "keyType": "AES-256 GCM Master Key",
+        "createdAt": "2026-01-10T12:00:00Z",
+        "keyFingerprint": "SHA256: 4f9a...8b21 (Doğrulandı)",
+        "maskedPassword": "•••••••••••••••••••••••• (OMNI-MASTER-SECRET-2026)",
+        "rawPasswordHint": "OMNI-MASTER-SECRET-KEY-2026",
+        "escrowStatus": "ESCROW_SYNCED_OMNIHUB"
+      },
+      {
+        "id": "key-02",
+        "jobName": "Muhasebe & Finans Ortak Klasör Yedeği",
+        "keyType": "AES-256 Military Encryption",
+        "createdAt": "2026-02-14T09:30:00Z",
+        "keyFingerprint": "SHA256: 9e12...77cc (Doğrulandı)",
+        "maskedPassword": "•••••••••••••••••••••••• (FINANCE-SECURE-VAULT)",
+        "rawPasswordHint": "FINANCE-SECURE-VAULT-2026",
+        "escrowStatus": "ESCROW_SYNCED_OMNIHUB"
+      },
+      {
+        "id": "key-03",
+        "jobName": "WORM Değiştirilemez Kilit Anahtarı",
+        "keyType": "Immutable Compliance Token",
+        "createdAt": "2026-03-01T15:45:00Z",
+        "keyFingerprint": "SHA256: c331...aa90 (Doğrulandı)",
+        "maskedPassword": "•••••••••••••••••••••••• (WORM-HARDWARE-LOCK)",
+        "rawPasswordHint": "WORM-AIRGAP-LOCK-PASS-9901",
+        "escrowStatus": "ESCROW_SYNCED_OMNIHUB"
+      }
+    ]
+  }
+}

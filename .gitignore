@@ -1,0 +1,21 @@
+# Node.js dependencies
+node_modules/
+client/node_modules/
+server/node_modules/
+
+# Build outputs
+client/dist/
+
+# Logs and runtime databases
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS specific files
+Thumbs.db
+.DS_Store
+
+# Temporary archives (large payload excluded from Git history, release assets will be in GitHub Releases)
+omni_payload.zip
+*.tmp

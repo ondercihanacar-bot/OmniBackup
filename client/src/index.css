@@ -1,0 +1,112 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html, body, #root {
+    height: 100%;
+    overflow: hidden;
+  }
+  body {
+    background-color: #f0f4f8;
+    color: #1e293b;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+}
+
+/* Acronis Clean Enterprise Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #e2e8f0;
+}
+::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+/* Acronis Deep Navy Sidebar Styling (from Image 1 & 2) */
+.acronis-sidebar {
+  background-color: #0b1f38;
+  color: #94a3b8;
+}
+
+.acronis-nav-active {
+  background-color: #0050a0;
+  color: #ffffff !important;
+}
+
+.acronis-nav-item:hover:not(.acronis-nav-active) {
+  background-color: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+}
+
+/* Acronis White Card Container (from Image 1 & 3) */
+.acronis-card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.acronis-card:hover {
+  box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.07);
+}
+
+/* Acronis Buttons (Solid Blue & Outline) */
+.btn-acronis-primary {
+  background-color: #0070e0;
+  color: #ffffff;
+  font-weight: 600;
+  border-radius: 8px;
+  transition: all 0.15s ease;
+}
+
+.btn-acronis-primary:hover {
+  background-color: #005bb8;
+}
+
+.btn-acronis-outline {
+  background-color: #ffffff;
+  color: #1e293b;
+  border: 1px solid #cbd5e1;
+  font-weight: 600;
+  border-radius: 8px;
+  transition: all 0.15s ease;
+}
+
+.btn-acronis-outline:hover {
+  background-color: #f8fafc;
+  border-color: #94a3b8;
+}
+
+/* Status Badges */
+.badge-ok {
+  background-color: #dcfce7;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+.badge-warning {
+  background-color: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+.badge-danger {
+  background-color: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+.badge-neutral {
+  background-color: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+}

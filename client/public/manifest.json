@@ -1,0 +1,16 @@
+{
+  "name": "OmniBackup Enterprise Cyber Vault",
+  "short_name": "OmniBackup",
+  "description": "Enterprise Grade Cyber Resilient SQL, File & System Backup Platform",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#030712",
+  "theme_color": "#0a1126",
+  "icons": [
+    {
+      "src": "/shield.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}
