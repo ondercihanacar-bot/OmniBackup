@@ -66,7 +66,7 @@ export default function SettingsView({ settings, onSaveSettings }) {
     setCheckingUpdate(true);
     setUpdateMsg(null);
     try {
-      const data = await api.checkUpdate();
+      const data = await api.checkUpdate(formData.updateServerUrl);
       setUpdateData(data);
       if (!data.hasUpdate) {
         setUpdateMsg("✓ Sisteminiz güncel! En son sürümü kullanıyorsunuz (v" + (data.currentVersion || "2.5.0") + ").");
@@ -672,9 +672,9 @@ export default function SettingsView({ settings, onSaveSettings }) {
             <div className="flex items-center gap-2 sm:w-1/2">
               <input
                 type="text"
-                value={formData.updateServerUrl || 'https://raw.githubusercontent.com/Onder/OmniBackup/main'}
+                value={formData.updateServerUrl || 'https://raw.githubusercontent.com/ondercihanacar-bot/OmniBackup/main'}
                 onChange={(e) => setFormData({ ...formData, updateServerUrl: e.target.value })}
-                placeholder="https://raw.githubusercontent.com/Kullanici/OmniBackup/main"
+                placeholder="https://raw.githubusercontent.com/ondercihanacar-bot/OmniBackup/main"
                 className="flex-1 px-3 py-1.5 rounded-lg border border-slate-300 bg-white font-mono text-slate-800 text-[11px] focus:outline-none focus:border-[#0070e0]"
               />
             </div>

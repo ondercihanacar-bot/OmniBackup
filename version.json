@@ -1,10 +1,10 @@
 {
-  "version": "2.6.0",
-  "buildDate": "2026-10-06T12:00:00Z",
+  "version": "2.7.0",
+  "buildDate": "2026-10-06T19:00:00Z",
   "minSupportedVersion": "1.0.0",
   "mandatory": false,
-  "releaseNotes": "OmniBackup Enterprise v2.6.0:\n- Ağ üzerinden canlı otomatik güncelleme (OTA Auto-Updater) desteği eklendi.\n- Geçen ve kalan süre (ETA) canlı telemetri optimizasyonu sağlandı.\n- Sistem tepsisinde (Tray Icon) 5 renkli siber radar animasyonu güçlendirildi.\n- SMB/NAS ve S3/Google Drive bağlantı test hızlandırmaları sağlandı.\n- SQLite / db.json veri yapısı korunarak sıfır kesintili yama uygulama motoru devreye alındı.",
-  "downloadUrl": "/api/update/download",
-  "packageSize": "4.8 MB",
+  "releaseNotes": "OmniBackup Enterprise v2.7.0 (Canlı Test Sürümü):\n- NAS & SMB Canlı Klasör Ağacı Gezgini (Tree Explorer) tam entegre edildi.\n- Ağ üzerinden canlı otomatik güncelleme (OTA Auto-Updater) uzaktan GitHub bağlantısı aktif edildi.\n- Görev oluşturmada NAS kimlik doğrulaması ve anlık bağlantı testi optimize edildi.\n- SQLite / db.json veri yapısı ve görevler korunarak sıfır kesintili güncelleme devrede.",
+  "downloadUrl": "https://raw.githubusercontent.com/ondercihanacar-bot/OmniBackup/main/omni_patch.zip",
+  "packageSize": "4.9 MB",
   "sha256": "LATEST_PATCH_DIGEST"
 }

@@ -1600,19 +1600,74 @@ app.post('/api/test-connection/cloud', async (req, res) => {
 // --------------------------------------------------------------------------
 const CURRENT_APP_VERSION = "2.5.0"; // Current installed version on this client instance
 
-// 1. Check for available updates
-app.get('/api/update/check', (req, res) => {
+// 1. Check for available updates (Supports remote GitHub / custom URL or local)
+app.get('/api/update/check', async (req, res) => {
+  const customUrl = req.query.url;
   const versionFile = path.join(__dirname, '../version.json');
-  if (!fs.existsSync(versionFile)) {
+  
+  // Helper to fetch JSON from remote URL
+  const fetchRemote = (targetUrl) => {
+    return new Promise((resolve, reject) => {
+      const client = targetUrl.startsWith('https') ? require('https') : require('http');
+      const request = client.get(targetUrl, { timeout: 4000 }, (resp) => {
+        if (resp.statusCode !== 200) {
+          return reject(new Error(`HTTP ${resp.statusCode}`));
+        }
+        let data = '';
+        resp.on('data', chunk => data += chunk);
+        resp.on('end', () => {
+          try {
+            resolve(JSON.parse(data));
+          } catch (e) {
+            reject(e);
+          }
+        });
+      });
+      request.on('error', reject);
+      request.on('timeout', () => {
+        request.destroy();
+        reject(new Error('Timeout'));
+      });
+    });
+  };
+
+  let remoteMeta = null;
+
+  // Try checking remote GitHub or user-specified URL first
+  const candidateUrls = [];
+  if (customUrl) {
+    candidateUrls.push(customUrl.endsWith('.json') ? customUrl : `${customUrl.replace(/\/$/, '')}/version.json`);
+  }
+  // Default official GitHub repo URL
+  candidateUrls.push('https://raw.githubusercontent.com/ondercihanacar-bot/OmniBackup/main/version.json');
+
+  for (const url of candidateUrls) {
+    try {
+      remoteMeta = await fetchRemote(url);
+      if (remoteMeta && remoteMeta.version) break;
+    } catch (e) {
+      // Continue to next candidate
+    }
+  }
+
+  // Fallback to local version.json if remote fetch failed or offline
+  if (!remoteMeta && fs.existsSync(versionFile)) {
+    try {
+      remoteMeta = JSON.parse(fs.readFileSync(versionFile, 'utf8'));
+    } catch (err) {
+      console.error('[Update Check Local Error]', err);
+    }
+  }
+
+  if (!remoteMeta) {
     return res.json({
       hasUpdate: false,
       currentVersion: CURRENT_APP_VERSION,
-      message: "Sistem güncel. Yeni bir sürüm bulunamadı."
+      message: "Sistem güncel veya güncelleme sunucusuna erişilemedi."
     });
   }
 
   try {
-    const remoteMeta = JSON.parse(fs.readFileSync(versionFile, 'utf8'));
     const isNewer = compareVersions(remoteMeta.version, CURRENT_APP_VERSION) > 0;
 
     res.json({
@@ -1621,7 +1676,7 @@ app.get('/api/update/check', (req, res) => {
       latestVersion: remoteMeta.version,
       buildDate: remoteMeta.buildDate,
       mandatory: remoteMeta.mandatory || false,
-      packageSize: remoteMeta.packageSize || '4.8 MB',
+      packageSize: remoteMeta.packageSize || '4.9 MB',
       releaseNotes: remoteMeta.releaseNotes || 'Genel sistem performans ve güvenlik güncellemeleri.',
       downloadUrl: remoteMeta.downloadUrl || '/api/update/download'
     });

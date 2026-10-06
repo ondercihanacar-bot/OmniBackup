@@ -778,8 +778,9 @@ export const api = {
   },
 
   // 7.28 OTA Network Auto-Updater
-  checkUpdate: async () => {
-    const res = await fetch(`${BASE_URL}/update/check`);
+  checkUpdate: async (url) => {
+    const query = url ? `?url=${encodeURIComponent(url)}` : '';
+    const res = await fetch(`${BASE_URL}/update/check${query}`);
     return res.json();
   },
   applyUpdate: async (downloadUrl) => {
