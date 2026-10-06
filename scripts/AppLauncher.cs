@@ -600,9 +600,10 @@ namespace OmniBackupLauncher
             }
             catch (Exception ex)
             {
-                // If WebView2 runtime fails, fallback to standalone browser window
-                lblLoading.Text = "WebView2 başlatılamadı, harici uygulama modu açılıyor...";
-                FallbackLaunch();
+                // If WebView2 runtime fails on client machine, launch native standalone app window and hide this empty container
+                this.BeginInvoke(new Action(() => {
+                    FallbackLaunch();
+                }));
             }
         }
 
@@ -610,6 +611,11 @@ namespace OmniBackupLauncher
         {
             try
             {
+                // Hide and close this empty black window so user only sees the clean app window
+                this.Opacity = 0;
+                this.ShowInTaskbar = false;
+                this.Visible = false;
+
                 string browserExe = FindChromiumBrowser();
                 string appUrl = "http://127.0.0.1:3060";
                 string profileDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "OmniBackup", "DesktopProfile");
@@ -625,15 +631,17 @@ namespace OmniBackupLauncher
                     );
                     psi.UseShellExecute = false;
                     Process.Start(psi);
-                    this.Hide();
                 }
                 else
                 {
                     Process.Start(appUrl);
-                    this.Hide();
                 }
             }
             catch { }
+            finally
+            {
+                this.Hide();
+            }
         }
 
         private string FindChromiumBrowser()
