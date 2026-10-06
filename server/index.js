@@ -1715,4 +1715,14 @@ server.listen(PORT, () => {
   console.log(`🚀 OmniBackup Central Master Server running on port ${PORT}`);
   console.log(`🌐 Dashboard: http://localhost:${PORT} or http://localhost:5176`);
   console.log(`=======================================================`);
+
+  // Background OmniHub Cloud Warm-up (Ensures zero-latency instant response)
+  const OMNIHUB_PING_INTERVAL = 5 * 60 * 1000; // 5 minutes
+  setInterval(async () => {
+    try {
+      const data = db.read();
+      const targetUrl = data.license?.omniHubServerUrl || "https://omnihub-sd23.onrender.com";
+      await fetch(`${targetUrl}/api/health`, { signal: AbortSignal.timeout(5000) });
+    } catch (_) {}
+  }, OMNIHUB_PING_INTERVAL);
 });
