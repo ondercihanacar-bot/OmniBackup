@@ -33,7 +33,7 @@ class LicenseEngine {
         activatedAt: null,
         expiresAt: trialExpiresAt,
         omniHubConnected: false,
-        omniHubServerUrl: "http://127.0.0.1:5200",
+        omniHubServerUrl: "https://omnihub-sd23.onrender.com",
         maxAgents: "Sınırsız (Demo)",
         maxSqlDatabases: "Sınırsız (Demo)",
         allowedFeatures: [
@@ -86,7 +86,7 @@ class LicenseEngine {
     }
 
     const hwid = this.getHardwareId();
-    const targetUrl = data.license?.omniHubServerUrl || "http://127.0.0.1:5200";
+    const targetUrl = data.license?.omniHubServerUrl || "https://omnihub-sd23.onrender.com";
 
     // 1. Try Live Online Activation with OmniHub Master Server
     try {
@@ -157,7 +157,7 @@ class LicenseEngine {
 
   async syncWithOmniHub(omniHubUrl) {
     const data = db.read();
-    const targetUrl = omniHubUrl || data.license?.omniHubServerUrl || "http://127.0.0.1:5200";
+    const targetUrl = omniHubUrl || data.license?.omniHubServerUrl || "https://omnihub-sd23.onrender.com";
     const hwid = this.getHardwareId();
 
     // 1. Try real sync with OmniHub
