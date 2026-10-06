@@ -18,4 +18,5 @@ Thumbs.db
 
 # Temporary archives (large payload excluded from Git history, release assets will be in GitHub Releases)
 omni_payload.zip
+node.exe
 *.tmp

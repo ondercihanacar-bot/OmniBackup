@@ -47,7 +47,7 @@ Write-Host "[1/3] Tam cevrimdisi payload arsivi olusturuluyor (omni_payload.zip)
 if (Test-Path $PayloadZip) { Remove-Item -Force $PayloadZip }
 
 Set-Location $ProjectRoot
-& tar.exe -acf omni_payload.zip --exclude=client/src --exclude=client/node_modules --exclude=omni_payload.zip --exclude=.git server client/dist scripts logo OmniBackup.exe Uninstall.exe KURULUM_KILAVUZU.txt package.json app.ico app_logo.png Microsoft.Web.WebView2.Core.dll Microsoft.Web.WebView2.WinForms.dll WebView2Loader.dll
+& tar.exe -acf omni_payload.zip --exclude=client/src --exclude=client/node_modules --exclude=omni_payload.zip --exclude=.git server client/dist scripts logo OmniBackup.exe Uninstall.exe KURULUM_KILAVUZU.txt package.json app.ico app_logo.png Microsoft.Web.WebView2.Core.dll Microsoft.Web.WebView2.WinForms.dll WebView2Loader.dll node.exe
 
 if (-not (Test-Path $PayloadZip)) {
     Write-Host "[HATA] omni_payload.zip olusturulamadi!" -ForegroundColor Red
