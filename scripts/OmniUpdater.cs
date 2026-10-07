@@ -153,7 +153,7 @@ namespace OmniBackupUpdater
             this.Font = new Font("Segoe UI", 9.5f, FontStyle.Regular);
 
             Label lblTitle = new Label();
-            lblTitle.Text = "OmniBackup Enterprise - Otomatik Güncelleme";
+            lblTitle.Text = "OmniBackup Enterprise - Hızlı Otomatik Güncelleme";
             lblTitle.Font = new Font("Segoe UI", 12f, FontStyle.Bold);
             lblTitle.ForeColor = Color.FromArgb(0, 168, 255);
             lblTitle.Location = new Point(24, 20);
@@ -190,13 +190,14 @@ namespace OmniBackupUpdater
             {
                 try
                 {
-                    Log("=== OmniUpdater Started ===");
+                    Log("=== OmniUpdater Fast Engine Started ===");
                     Log(string.Format("TargetDir={0}, PatchZip={1}, ParentPid={2}, RelaunchExe={3}", targetDir, patchZip, parentPid, relaunchExe));
 
-                    UpdateUI(15, "OmniBackup ana penceresi ve servisler kapatılıyor...");
+                    UpdateUI(15, "OmniBackup pencereleri ve arka plan servisleri kapatılıyor...");
                     
-                    // 1. Terminate OmniBackup.exe desktop launcher instances (NEVER kill self!)
+                    // 1. Terminate all OmniBackup processes & browser app windows holding file locks
                     KillProcessByName("OmniBackup");
+                    CloseOmniBackupAppWindows();
 
                     // 2. Terminate Parent Process (Node.js) if passed
                     if (parentPid > 0 && parentPid != currentPid)
@@ -207,16 +208,16 @@ namespace OmniBackupUpdater
                             if (!p.HasExited)
                             {
                                 p.Kill();
-                                p.WaitForExit(3000);
+                                p.WaitForExit(1000);
                             }
                         }
                         catch { }
                     }
 
-                    // 3. Stop all node and webview processes in targetDir
+                    // 3. Stop all node and webview processes
                     KillNodeProcesses();
                     KillWebViewProcesses();
-                    Thread.Sleep(1000);
+                    Thread.Sleep(300);
 
                     UpdateUI(35, "Güncelleme paketi açılıyor ve bütünlük doğrulanıyor...");
                     if (!File.Exists(patchZip))
@@ -236,7 +237,7 @@ namespace OmniBackupUpdater
                     {
                         int totalEntries = archive.Entries.Count;
                         int processed = 0;
-                        Log(string.Format("Archive opened successfully. Total entries: {0}", totalEntries));
+                        Log(string.Format("Archive opened. Total entries: {0}", totalEntries));
 
                         foreach (ZipArchiveEntry entry in archive.Entries)
                         {
@@ -266,10 +267,7 @@ namespace OmniBackupUpdater
                             if (!string.IsNullOrEmpty(entry.Name)) // If it's a file
                             {
                                 bool extracted = false;
-                                Exception lastEx = null;
-
-                                // Retry up to 10 times with backoff if file is temporarily locked
-                                for (int i = 0; i < 10; i++)
+                                for (int retry = 0; retry < 5; retry++)
                                 {
                                     try
                                     {
@@ -277,31 +275,25 @@ namespace OmniBackupUpdater
                                         extracted = true;
                                         break;
                                     }
-                                    catch (Exception ex)
+                                    catch
                                     {
-                                        lastEx = ex;
                                         KillProcessByName("OmniBackup");
+                                        CloseOmniBackupAppWindows();
                                         KillNodeProcesses();
                                         KillWebViewProcesses();
-                                        Thread.Sleep(300);
+                                        Thread.Sleep(50);
                                     }
-                                }
-
-                                if (!extracted && lastEx != null)
-                                {
-                                    Log(string.Format("WARN: Could not extract {0}: {1}", entryName, lastEx.Message));
                                 }
                             }
 
                             processed++;
-                            int curVal = 50 + (int)((processed / (float)totalEntries) * 35);
-                            UpdateUI(curVal, string.Format("Güncelleniyor ({0}/{1}): {2}", processed, totalEntries, entry.Name));
+                            int curVal = 50 + (int)((processed / (float)totalEntries) * 45);
+                            UpdateUI(curVal, string.Format("Yenileniyor ({0}/{1}): {2}", processed, totalEntries, entry.Name));
                         }
                     }
 
-                    UpdateUI(90, "Önbellek temizleniyor ve servis yapılandırması tamamlanıyor...");
+                    UpdateUI(95, "Yapılandırma tamamlandı...");
                     Log("Extraction completed successfully.");
-                    Thread.Sleep(500);
 
                     // Clean temp zip
                     try
@@ -312,7 +304,7 @@ namespace OmniBackupUpdater
 
                     UpdateUI(100, "Güncelleme tamamlandı! OmniBackup başlatılıyor...");
                     Log("Launching updated OmniBackup executable: " + relaunchExe);
-                    Thread.Sleep(800);
+                    Thread.Sleep(400);
 
                     // Launch updated OmniBackup.exe
                     if (File.Exists(relaunchExe))
@@ -354,6 +346,60 @@ namespace OmniBackupUpdater
             t.Start();
         }
 
+        private void CloseOmniBackupAppWindows()
+        {
+            try
+            {
+                foreach (Process p in Process.GetProcesses())
+                {
+                    if (p.Id == currentPid) continue;
+                    if (p.ProcessName.Equals("OmniUpdater", StringComparison.OrdinalIgnoreCase)) continue;
+
+                    try
+                    {
+                        bool isOmniApp = false;
+                        if (p.MainWindowHandle != IntPtr.Zero && !string.IsNullOrEmpty(p.MainWindowTitle))
+                        {
+                            string t = p.MainWindowTitle;
+                            // Match the main OmniBackup app or webview title, but NEVER match OmniUpdater!
+                            if ((t.IndexOf("OmniBackup", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                 t.IndexOf("127.0.0.1:3060", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                 t.IndexOf("localhost:3060", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                 t.IndexOf("Cyber Vault", StringComparison.OrdinalIgnoreCase) >= 0) &&
+                                t.IndexOf("Updater", StringComparison.OrdinalIgnoreCase) < 0)
+                            {
+                                isOmniApp = true;
+                            }
+                        }
+
+                        // Also check browser processes launched with our profile
+                        if (!isOmniApp && (p.ProcessName.Equals("msedge", StringComparison.OrdinalIgnoreCase) || p.ProcessName.Equals("chrome", StringComparison.OrdinalIgnoreCase)))
+                        {
+                            if (!string.IsNullOrEmpty(p.MainWindowTitle) && 
+                                (p.MainWindowTitle.IndexOf("OmniBackup", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                 p.MainWindowTitle.IndexOf("3060", StringComparison.OrdinalIgnoreCase) >= 0))
+                            {
+                                isOmniApp = true;
+                            }
+                        }
+
+                        if (isOmniApp)
+                        {
+                            try
+                            {
+                                p.Kill();
+                            }
+                            catch { }
+                        }
+                    }
+                    catch { }
+                }
+
+                Program.RefreshNotificationArea();
+            }
+            catch { }
+        }
+
         private void KillProcessByName(string processName)
         {
             try
@@ -363,25 +409,10 @@ namespace OmniBackupUpdater
                     if (p.Id == currentPid) continue; // SAFETY: NEVER KILL SELF!
                     try
                     {
-                        if (p.MainWindowHandle != IntPtr.Zero)
-                        {
-                            Program.PostMessage(p.MainWindowHandle, Program.WM_CLOSE, IntPtr.Zero, IntPtr.Zero);
-                        }
-                    }
-                    catch { }
-                }
-
-                Thread.Sleep(300);
-
-                foreach (Process p in Process.GetProcessesByName(processName))
-                {
-                    if (p.Id == currentPid) continue;
-                    try
-                    {
                         if (!p.HasExited)
                         {
                             p.Kill();
-                            p.WaitForExit(1000);
+                            p.WaitForExit(500);
                         }
                     }
                     catch { }

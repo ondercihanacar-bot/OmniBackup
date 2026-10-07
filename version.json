@@ -1,9 +1,9 @@
 {
-  "version": "2.8.8",
-  "buildDate": "2026-10-07T23:10:00Z",
+  "version": "2.8.9",
+  "buildDate": "2026-10-07T23:25:00Z",
   "minSupportedVersion": "1.0.0",
   "mandatory": false,
-  "releaseNotes": "OmniBackup Enterprise v2.8.8:\n- Başlatma ve Pencere Yönetimi Yenilendi: Siyah yükleme ekranı ve pencere çakışmaları tamamen kaldırıldı; bağımsız native uygulama penceresi anında açılmaktadır.\n- Güçlendirilmiş Görev Çubuğu ve Tepsi Entegrasyonu: Tek ve çift tıklama ile pencere anında öne gelir; gereksiz arka plan pencereleri sonlandırıldı.\n- 0 Bağımlılık Garantisi: WebView2 runtime eksikliklerine takılmayan evrensel Chromium App motoru devrede.\n- Tam Veri ve Görev Güvenliği: Tüm ayarlar, yedek planları ve veritabanı sıfır kayıpla korunmaktadır.",
+  "releaseNotes": "OmniBackup Enterprise v2.8.9:\n- Işık Hızında Güncelleme: Güncelleyici başlatıldığında tarayıcı pencereleri anında kapatılır, dosya kilitleri kaldırılır ve güncelleme 1-2 saniyede tamamlanır.\n- Beyaz 'Sayfaya Ulaşılamıyor' Ekranı Engellendi: Eski pencereler anında temizlenerek güncelleme bitiminde yeni arayüz otomatik ve pürüzsüzce açılır.\n- Sıfır Demo ve Tam Dinamik Sistem: Tüm kontrol paneli ve raporlar canlı verilere bağlıdır.",
   "downloadUrl": "https://raw.githubusercontent.com/ondercihanacar-bot/OmniBackup/main/omni_patch.zip",
   "setupUrl": "https://github.com/ondercihanacar-bot/OmniBackup/raw/main/OmniBackup_Setup.exe",
   "packageSize": "3.8 MB",

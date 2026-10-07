@@ -279,10 +279,10 @@ export default function Sidebar({
 
         {/* Bottom Engine Watermark */}
         <div className="p-3 border-t border-white/10 text-[10px] text-slate-400 font-mono flex items-center justify-between bg-[#050b14]">
-          <span className="text-cyan-300 font-bold">OmniEngine v2.8.8</span>
+          <span className="text-cyan-300 font-bold">OmniEngine v2.8.9</span>
           <span className="text-emerald-400 flex items-center gap-1 font-semibold">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-            Live (v2.8.8)
+            Live (v2.8.9)
           </span>
         </div>
       </div>

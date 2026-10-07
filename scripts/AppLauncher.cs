@@ -59,7 +59,7 @@ namespace OmniBackupLauncher
             catch { }
 
             BaseDir = AppDomain.CurrentDomain.BaseDirectory;
-            Log("=== OmniBackup Main Starting (v2.8.7) ===");
+            Log("=== OmniBackup Main Starting (v2.8.9) ===");
             AppDomain.CurrentDomain.UnhandledException += (s, e) => {
                 Log("Unhandled AppDomain Exception: " + e.ExceptionObject);
             };
@@ -253,7 +253,7 @@ namespace OmniBackupLauncher
         {
             TrayMenu = new ContextMenuStrip();
 
-            ToolStripMenuItem titleItem = new ToolStripMenuItem("OmniBackup Enterprise Cyber Vault v2.8.7");
+            ToolStripMenuItem titleItem = new ToolStripMenuItem("OmniBackup Enterprise Cyber Vault v2.8.9");
             titleItem.Font = new Font("Segoe UI", 9f, FontStyle.Bold);
             titleItem.Enabled = false;
             TrayMenu.Items.Add(titleItem);
