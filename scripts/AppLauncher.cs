@@ -593,6 +593,27 @@ namespace OmniBackupLauncher
 
                 // Listen for navigation completed
                 webView.NavigationCompleted += (s, e) => {
+                    if (!e.IsSuccess)
+                    {
+                        // Auto retry if backend server was still starting up
+                        System.Windows.Forms.Timer retryTimer = new System.Windows.Forms.Timer();
+                        retryTimer.Interval = 2000;
+                        retryTimer.Tick += (ts, te) => {
+                            retryTimer.Stop();
+                            retryTimer.Dispose();
+                            Program.EnsureServerStarted();
+                            try
+                            {
+                                if (webView != null && !webView.IsDisposed && webView.CoreWebView2 != null)
+                                {
+                                    webView.Source = new Uri("http://127.0.0.1:3060");
+                                }
+                            }
+                            catch { }
+                        };
+                        retryTimer.Start();
+                        return;
+                    }
                     lblLoading.Visible = false;
                     webView.Visible = true;
                 };

@@ -111,7 +111,10 @@ namespace OmniBackupUpdater
                 {
                     UpdateUI(15, "Çalışan OmniBackup ve Node.js işlemleri durduruluyor...");
                     
-                    // 1. Terminate or wait for Parent Process
+                    // 1. Terminate OmniBackup.exe desktop instances to release mutex and free files
+                    KillProcessByName("OmniBackup");
+
+                    // 2. Terminate or wait for Parent Process
                     if (parentPid > 0)
                     {
                         try
@@ -126,9 +129,9 @@ namespace OmniBackupUpdater
                         catch { }
                     }
 
-                    // Also stop any node server processes running inside targetDir
+                    // 3. Also stop any node server processes running inside targetDir
                     KillNodeInTargetDir(targetDir);
-                    Thread.Sleep(1200);
+                    Thread.Sleep(1500);
 
                     UpdateUI(35, "Güncelleme paketi açılıyor ve bütünlük doğrulanıyor...");
                     if (!File.Exists(patchZip))
@@ -144,9 +147,13 @@ namespace OmniBackupUpdater
 
                         foreach (ZipArchiveEntry entry in archive.Entries)
                         {
-                            // SAFETY: NEVER OVERWRITE db.json OR USER LOCAL CONFIGS
+                            // SAFETY: NEVER OVERWRITE USER DATABASE, SAVED JOBS, SETTINGS OR USER STORAGE
                             string entryName = entry.FullName.Replace('/', '\\');
-                            if (entryName.Equals("server\\db.json", StringComparison.OrdinalIgnoreCase) ||
+                            if (entryName.StartsWith("server\\data\\", StringComparison.OrdinalIgnoreCase) ||
+                                entryName.StartsWith("data\\", StringComparison.OrdinalIgnoreCase) ||
+                                entryName.Equals("server\\data", StringComparison.OrdinalIgnoreCase) ||
+                                entryName.Equals("data", StringComparison.OrdinalIgnoreCase) ||
+                                entryName.Equals("server\\db.json", StringComparison.OrdinalIgnoreCase) ||
                                 entryName.Equals("db.json", StringComparison.OrdinalIgnoreCase) ||
                                 entryName.StartsWith("backups\\", StringComparison.OrdinalIgnoreCase) ||
                                 entryName.StartsWith("storage\\", StringComparison.OrdinalIgnoreCase))
@@ -222,6 +229,23 @@ namespace OmniBackupUpdater
 
             t.IsBackground = true;
             t.Start();
+        }
+
+        private void KillProcessByName(string processName)
+        {
+            try
+            {
+                foreach (Process p in Process.GetProcessesByName(processName))
+                {
+                    try
+                    {
+                        p.Kill();
+                        p.WaitForExit(2000);
+                    }
+                    catch { }
+                }
+            }
+            catch { }
         }
 
         private void KillNodeInTargetDir(string dir)

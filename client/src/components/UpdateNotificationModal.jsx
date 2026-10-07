@@ -29,18 +29,28 @@ export default function UpdateNotificationModal({ isOpen, onClose, updateInfo, o
     try {
       const res = await api.applyUpdate(updateInfo.downloadUrl);
       if (res.success) {
-        setStatusMessage(res.message || 'Güncelleme başladı. Dosyalar yenileniyor, sistem yeniden başlatılıyor...');
+        setStatusMessage('Güncelleme başladı. Dosyalar yenileniyor, sistem yeniden başlatılıyor...');
         if (onUpdateStarted) onUpdateStarted();
 
-        // Count down and reload interface
-        let countdown = 6;
-        const interval = setInterval(() => {
-          countdown--;
-          if (countdown > 0) {
-            setStatusMessage(`Güncelleme uygulandı! Arayüz ${countdown} saniye içinde yenilenecek...`);
-          } else {
-            clearInterval(interval);
-            window.location.reload();
+        // Akıllı bekleme: Sunucu kapandıktan sonra yeni sürümün ayağa kalkmasını bekle
+        let attempts = 0;
+        const checkServerInterval = setInterval(async () => {
+          attempts++;
+          try {
+            const probe = await fetch('/api/stats', { cache: 'no-store' });
+            if (probe.ok) {
+              clearInterval(checkServerInterval);
+              setStatusMessage('Yeni sürüm hazır! Arayüz yükleniyor...');
+              setTimeout(() => {
+                window.location.reload();
+              }, 800);
+            }
+          } catch (e) {
+            setStatusMessage(`Güncelleme uygulanıyor ve servis yeniden başlatılıyor... (${attempts} sn)`);
+            if (attempts > 45) {
+              clearInterval(checkServerInterval);
+              window.location.reload();
+            }
           }
         }, 1000);
       } else {

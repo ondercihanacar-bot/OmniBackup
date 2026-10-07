@@ -827,6 +827,23 @@ namespace OmniBackupInstaller
                                     continue;
                                 }
 
+                                // SAFETY: If updating/installing over existing installation, NEVER OVERWRITE user database, custom backup jobs, settings or backups!
+                                string entryName = entry.FullName.Replace('/', '\\');
+                                if (File.Exists(destinationPath))
+                                {
+                                    if (entryName.StartsWith("server\\data\\", StringComparison.OrdinalIgnoreCase) ||
+                                        entryName.StartsWith("data\\", StringComparison.OrdinalIgnoreCase) ||
+                                        entryName.Equals("server\\data", StringComparison.OrdinalIgnoreCase) ||
+                                        entryName.Equals("data", StringComparison.OrdinalIgnoreCase) ||
+                                        entryName.Equals("server\\db.json", StringComparison.OrdinalIgnoreCase) ||
+                                        entryName.Equals("db.json", StringComparison.OrdinalIgnoreCase) ||
+                                        entryName.StartsWith("backups\\", StringComparison.OrdinalIgnoreCase) ||
+                                        entryName.StartsWith("storage\\", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        continue;
+                                    }
+                                }
+
                                 string dir = Path.GetDirectoryName(destinationPath);
                                 if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
