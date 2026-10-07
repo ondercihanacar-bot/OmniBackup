@@ -59,7 +59,7 @@ namespace OmniBackupLauncher
             catch { }
 
             BaseDir = AppDomain.CurrentDomain.BaseDirectory;
-            Log("=== OmniBackup Main Starting (v2.8.9) ===");
+            Log("=== OmniBackup Main Starting (v2.9.0) ===");
             AppDomain.CurrentDomain.UnhandledException += (s, e) => {
                 Log("Unhandled AppDomain Exception: " + e.ExceptionObject);
             };

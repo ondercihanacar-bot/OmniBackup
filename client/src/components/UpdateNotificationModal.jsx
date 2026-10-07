@@ -32,6 +32,13 @@ export default function UpdateNotificationModal({ isOpen, onClose, updateInfo, o
         setStatusMessage('Güncelleyici devraldı! Paket indiriliyor ve sistem yenileniyor...');
         if (onUpdateStarted) onUpdateStarted();
 
+        setTimeout(() => {
+          try {
+            window.open('', '_self', '');
+            window.close();
+          } catch (_) {}
+        }, 800);
+
         // Pencere kapanmasa bile ekranı temiz/profesyonel bekleme durumuna al
         let attempts = 0;
         const checkServerInterval = setInterval(async () => {

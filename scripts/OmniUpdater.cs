@@ -361,11 +361,14 @@ namespace OmniBackupUpdater
                         if (p.MainWindowHandle != IntPtr.Zero && !string.IsNullOrEmpty(p.MainWindowTitle))
                         {
                             string t = p.MainWindowTitle;
-                            // Match the main OmniBackup app or webview title, but NEVER match OmniUpdater!
+                            // Match the main OmniBackup app, webview title, or failed connection title
                             if ((t.IndexOf("OmniBackup", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                                 t.IndexOf("127.0.0.1:3060", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                                 t.IndexOf("localhost:3060", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                                 t.IndexOf("Cyber Vault", StringComparison.OrdinalIgnoreCase) >= 0) &&
+                                 t.IndexOf("127.0.0.1", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                 t.IndexOf("localhost", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                 t.IndexOf("Cyber Vault", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                 t.IndexOf("reach this page", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                 t.IndexOf("ulaşılamıyor", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                 t.IndexOf("ERR_CONNECTION", StringComparison.OrdinalIgnoreCase) >= 0) &&
                                 t.IndexOf("Updater", StringComparison.OrdinalIgnoreCase) < 0)
                             {
                                 isOmniApp = true;
@@ -377,6 +380,8 @@ namespace OmniBackupUpdater
                         {
                             if (!string.IsNullOrEmpty(p.MainWindowTitle) && 
                                 (p.MainWindowTitle.IndexOf("OmniBackup", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                 p.MainWindowTitle.IndexOf("127.0.0.1", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                 p.MainWindowTitle.IndexOf("localhost", StringComparison.OrdinalIgnoreCase) >= 0 ||
                                  p.MainWindowTitle.IndexOf("3060", StringComparison.OrdinalIgnoreCase) >= 0))
                             {
                                 isOmniApp = true;
@@ -388,6 +393,7 @@ namespace OmniBackupUpdater
                             try
                             {
                                 p.Kill();
+                                p.WaitForExit(500);
                             }
                             catch { }
                         }
@@ -433,6 +439,7 @@ namespace OmniBackupUpdater
                     try
                     {
                         p.Kill();
+                        p.WaitForExit(1000);
                     }
                     catch { }
                 }
@@ -450,6 +457,7 @@ namespace OmniBackupUpdater
                     try
                     {
                         p.Kill();
+                        p.WaitForExit(1000);
                     }
                     catch { }
                 }

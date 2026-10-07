@@ -1637,7 +1637,7 @@ const getInstalledVersion = () => {
       }
     }
   } catch (e) { }
-  return "2.8.9";
+  return "2.9.0";
 };
 
 // Helper to fetch JSON from remote URL with redirect support
@@ -1833,12 +1833,16 @@ app.post('/api/update/apply', async (req, res) => {
       return res.status(500).json({ success: false, error: "OmniUpdater.exe aracı bulunamadı." });
     }
 
-    // Launch OmniUpdater.exe detached
+    // Copy updater to tempDir so it does not lock scripts/OmniUpdater.exe during replacement
+    const tempUpdaterExe = path.join(tempDir, `OmniUpdater_Runner_${Date.now()}.exe`);
+    fs.copyFileSync(updaterExe, tempUpdaterExe);
+
+    // Launch OmniUpdater from temp directory detached
     const parentPid = process.pid;
     const relaunchExe = path.join(projectRoot, 'OmniBackup.exe');
     const { spawn } = require('child_process');
 
-    const updaterProcess = spawn(updaterExe, [projectRoot, patchTempZip, String(parentPid), relaunchExe], {
+    const updaterProcess = spawn(tempUpdaterExe, [projectRoot, patchTempZip, String(parentPid), relaunchExe], {
       detached: true,
       stdio: 'ignore'
     });
