@@ -1598,7 +1598,18 @@ app.post('/api/test-connection/cloud', async (req, res) => {
 // --------------------------------------------------------------------------
 // 7.27 OTA NETWORK AUTO-UPDATER API
 // --------------------------------------------------------------------------
-const CURRENT_APP_VERSION = "2.5.0"; // Current installed version on this client instance
+let CURRENT_APP_VERSION = "2.7.0"; // Current installed version on this client instance
+try {
+  const localVerPath = path.join(__dirname, '../version.json');
+  if (fs.existsSync(localVerPath)) {
+    const vData = JSON.parse(fs.readFileSync(localVerPath, 'utf8'));
+    if (vData && vData.version) {
+      CURRENT_APP_VERSION = vData.version;
+    }
+  }
+} catch (e) {
+  CURRENT_APP_VERSION = "2.7.0";
+}
 
 // 1. Check for available updates (Supports remote GitHub / custom URL or local)
 app.get('/api/update/check', async (req, res) => {
