@@ -67,12 +67,13 @@ namespace OmniBackupUpdater
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
+            this.TopMost = true;
             this.BackColor = Color.FromArgb(10, 17, 38); // Acronis Deep Navy
             this.ForeColor = Color.White;
             this.Font = new Font("Segoe UI", 9.5f, FontStyle.Regular);
 
             Label lblTitle = new Label();
-            lblTitle.Text = "OmniBackup Canlı Güncelleme Yükleniyor";
+            lblTitle.Text = "OmniBackup Enterprise - Otomatik Güncelleme";
             lblTitle.Font = new Font("Segoe UI", 12f, FontStyle.Bold);
             lblTitle.ForeColor = Color.FromArgb(0, 168, 255);
             lblTitle.Location = new Point(24, 20);
@@ -109,12 +110,15 @@ namespace OmniBackupUpdater
             {
                 try
                 {
-                    UpdateUI(15, "Çalışan OmniBackup ve Node.js işlemleri durduruluyor...");
+                    UpdateUI(15, "OmniBackup ana penceresi ve servisler kapatılıyor...");
                     
                     // 1. Terminate OmniBackup.exe desktop instances to release mutex and free files
                     KillProcessByName("OmniBackup");
 
-                    // 2. Terminate or wait for Parent Process
+                    // 2. Also close any browser app windows showing OmniBackup
+                    CloseOmniBackupAppWindows();
+
+                    // 3. Terminate or wait for Parent Process (Node.js)
                     if (parentPid > 0)
                     {
                         try
@@ -129,7 +133,7 @@ namespace OmniBackupUpdater
                         catch { }
                     }
 
-                    // 3. Also stop any node server processes running inside targetDir
+                    // 4. Also stop any node server processes running inside targetDir
                     KillNodeInTargetDir(targetDir);
                     Thread.Sleep(1500);
 
@@ -241,6 +245,31 @@ namespace OmniBackupUpdater
                     {
                         p.Kill();
                         p.WaitForExit(2000);
+                    }
+                    catch { }
+                }
+            }
+            catch { }
+        }
+
+        private void CloseOmniBackupAppWindows()
+        {
+            try
+            {
+                foreach (Process p in Process.GetProcesses())
+                {
+                    try
+                    {
+                        if (p.MainWindowHandle != IntPtr.Zero && !string.IsNullOrEmpty(p.MainWindowTitle))
+                        {
+                            string t = p.MainWindowTitle;
+                            if (t.IndexOf("OmniBackup", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                t.IndexOf("127.0.0.1", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                t.IndexOf("Cyber Vault", StringComparison.OrdinalIgnoreCase) >= 0)
+                            {
+                                p.Kill();
+                            }
+                        }
                     }
                     catch { }
                 }

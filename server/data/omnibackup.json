@@ -159,6 +159,13 @@
   ],
   "logs": [
     {
+      "id": "log-1791389861558-944",
+      "timestamp": "2026-10-07T16:17:41.558Z",
+      "level": "success",
+      "source": "Auth",
+      "message": "Yetkilendirme doğrulaması başarılı (admin) [2FA]."
+    },
+    {
       "id": "log-1791230675894-885",
       "timestamp": "2026-10-05T20:04:35.894Z",
       "level": "success",

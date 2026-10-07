@@ -245,18 +245,7 @@ namespace OmniBackupLauncher
             TrayMenu.Items.Add(new ToolStripSeparator());
 
             ToolStripMenuItem openItem = new ToolStripMenuItem("🛡️ Program Penceresini Aç", null, (s, e) => {
-                if (AppWindow != null && !AppWindow.IsDisposed)
-                {
-                    AppWindow.Show();
-                    AppWindow.WindowState = FormWindowState.Normal;
-                    AppWindow.BringToFront();
-                    AppWindow.Activate();
-                }
-                else
-                {
-                    AppWindow = new MainWindow();
-                    AppWindow.Show();
-                }
+                OpenMainWindow();
             });
             openItem.Font = new Font("Segoe UI", 9f, FontStyle.Bold);
             TrayMenu.Items.Add(openItem);
@@ -292,13 +281,16 @@ namespace OmniBackupLauncher
             TrayIcon.ContextMenuStrip = TrayMenu;
             TrayIcon.Visible = true;
 
+            // Double-click tray icon to immediately open program window
             TrayIcon.DoubleClick += (s, e) => {
-                if (AppWindow != null && !AppWindow.IsDisposed)
+                OpenMainWindow();
+            };
+
+            // Single left-click tray icon to open program window
+            TrayIcon.MouseClick += (s, e) => {
+                if (e.Button == MouseButtons.Left)
                 {
-                    AppWindow.Show();
-                    AppWindow.WindowState = FormWindowState.Normal;
-                    AppWindow.BringToFront();
-                    AppWindow.Activate();
+                    OpenMainWindow();
                 }
             };
 
@@ -507,6 +499,82 @@ namespace OmniBackupLauncher
             Environment.Exit(0);
         }
 
+        public static void OpenMainWindow()
+        {
+            try
+            {
+                EnsureServerStarted();
+
+                if (AppWindow != null && !AppWindow.IsDisposed)
+                {
+                    AppWindow.Opacity = 1;
+                    AppWindow.ShowInTaskbar = true;
+                    AppWindow.Visible = true;
+                    AppWindow.Show();
+                    AppWindow.WindowState = FormWindowState.Normal;
+                    AppWindow.BringToFront();
+                    AppWindow.Activate();
+                    SetForegroundWindow(AppWindow.Handle);
+                }
+
+                BringBrowserAppToFrontOrOpen();
+            }
+            catch { }
+        }
+
+        public static void BringBrowserAppToFrontOrOpen()
+        {
+            try
+            {
+                bool windowFound = false;
+                foreach (Process p in Process.GetProcesses())
+                {
+                    try
+                    {
+                        if (p.MainWindowHandle != IntPtr.Zero && !string.IsNullOrEmpty(p.MainWindowTitle))
+                        {
+                            string t = p.MainWindowTitle;
+                            if (t.IndexOf("OmniBackup", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                t.IndexOf("127.0.0.1", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                t.IndexOf("Cyber Vault", StringComparison.OrdinalIgnoreCase) >= 0)
+                            {
+                                ShowWindow(p.MainWindowHandle, 9); // SW_RESTORE
+                                SetForegroundWindow(p.MainWindowHandle);
+                                windowFound = true;
+                                break;
+                            }
+                        }
+                    }
+                    catch { }
+                }
+
+                if (!windowFound)
+                {
+                    string browserExe = MainWindow.FindChromiumBrowserPath();
+                    string appUrl = "http://127.0.0.1:3060";
+                    string profileDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "OmniBackup", "DesktopProfile");
+
+                    if (!string.IsNullOrEmpty(browserExe))
+                    {
+                        ProcessStartInfo psi = new ProcessStartInfo();
+                        psi.FileName = browserExe;
+                        psi.Arguments = string.Format(
+                            "--app=\"{0}\" --user-data-dir=\"{1}\" --window-size=1440,900 --disable-features=TranslateUI --disable-extensions --no-first-run",
+                            appUrl,
+                            profileDir
+                        );
+                        psi.UseShellExecute = false;
+                        Process.Start(psi);
+                    }
+                    else
+                    {
+                        Process.Start(appUrl);
+                    }
+                }
+            }
+            catch { }
+        }
+
         public static void Cleanup()
         {
             try
@@ -546,7 +614,7 @@ namespace OmniBackupLauncher
 
         private void InitializeComponent()
         {
-            this.Text = "OmniBackup Enterprise Cyber Vault v2.8.1";
+            this.Text = "OmniBackup Enterprise Cyber Vault v2.8.2";
             this.Size = new Size(1440, 900);
             this.MinimumSize = new Size(1024, 680);
             this.StartPosition = FormStartPosition.CenterScreen;
@@ -668,7 +736,7 @@ namespace OmniBackupLauncher
                     Thread.Sleep(500);
                 }
 
-                string browserExe = FindChromiumBrowser();
+                string browserExe = FindChromiumBrowserPath();
                 string appUrl = "http://127.0.0.1:3060";
                 string profileDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "OmniBackup", "DesktopProfile");
 
@@ -696,14 +764,16 @@ namespace OmniBackupLauncher
             }
         }
 
-        private string FindChromiumBrowser()
+        public static string FindChromiumBrowserPath()
         {
             string[] possiblePaths = new string[]
             {
                 @"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
                 @"C:\Program Files\Microsoft\Edge\Application\msedge.exe",
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), @"Microsoft\Edge\Application\msedge.exe"),
-                @"C:\Program Files\Google\Chrome\Application\chrome.exe"
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), @"Microsoft\Edge\Application\msedge.exe"),
+                @"C:\Program Files\Google\Chrome\Application\chrome.exe",
+                @"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
             };
 
             foreach (string p in possiblePaths)
