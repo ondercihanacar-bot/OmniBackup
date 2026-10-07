@@ -17,7 +17,7 @@ $IconPath = Join-Path $ProjectRoot "scripts\app.ico"
 $LauncherCs = Join-Path $ProjectRoot "scripts\AppLauncher.cs"
 $LauncherOut = Join-Path $ProjectRoot "scripts\OmniBackup.exe"
 $RootLauncherOut = Join-Path $ProjectRoot "OmniBackup.exe"
-& C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe /target:winexe /out:"$LauncherOut" /win32icon:"$IconPath" /reference:System.Windows.Forms.dll /reference:System.Drawing.dll /reference:"$ProjectRoot\scripts\lib\Microsoft.Web.WebView2.Core.dll" /reference:"$ProjectRoot\scripts\lib\Microsoft.Web.WebView2.WinForms.dll" /optimize+ "$LauncherCs"
+& C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe /target:winexe /out:"$LauncherOut" /win32icon:"$IconPath" /reference:System.Windows.Forms.dll /reference:System.Drawing.dll /optimize+ "$LauncherCs"
 Copy-Item -Force "$LauncherOut" "$RootLauncherOut"
 
 $UpdaterCs = Join-Path $ProjectRoot "scripts\OmniUpdater.cs"

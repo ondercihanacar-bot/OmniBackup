@@ -3,13 +3,10 @@ using System.IO;
 using System.Diagnostics;
 using System.Net;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Runtime.InteropServices;
-using Microsoft.Web.WebView2.Core;
-using Microsoft.Web.WebView2.WinForms;
 
 namespace OmniBackupLauncher
 {
@@ -21,7 +18,6 @@ namespace OmniBackupLauncher
         public static Mutex SingleInstanceMutex = null;
         public static string BaseDir = "";
         public static Icon AppIcon = null;
-        public static MainWindow AppWindow = null;
 
         // Tray Animation & Live Backup Watcher
         public static System.Windows.Forms.Timer TrayAnimTimer = null;
@@ -63,7 +59,7 @@ namespace OmniBackupLauncher
             catch { }
 
             BaseDir = AppDomain.CurrentDomain.BaseDirectory;
-            Log("=== OmniBackup Main Starting ===");
+            Log("=== OmniBackup Main Starting (v2.8.7) ===");
             AppDomain.CurrentDomain.UnhandledException += (s, e) => {
                 Log("Unhandled AppDomain Exception: " + e.ExceptionObject);
             };
@@ -83,7 +79,7 @@ namespace OmniBackupLauncher
                 return;
             }
 
-            Log("Acquired single instance mutex. Initializing WinForms...");
+            Log("Acquired single instance mutex. Initializing WinForms ApplicationContext...");
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
@@ -98,11 +94,12 @@ namespace OmniBackupLauncher
                 EnsureServerStarted();
                 Log("Server status verified.");
 
-                // 3. Launch Native Windows Desktop Form
-                Log("Creating MainWindow...");
-                AppWindow = new MainWindow();
-                Log("MainWindow created. Calling Application.Run...");
-                Application.Run(AppWindow);
+                // 3. Open Application UI Window (Dedicated Chromium App Window)
+                Log("Opening application window...");
+                OpenAppWindow();
+
+                // 4. Start Background Message Loop via ApplicationContext (No black placeholder forms!)
+                Application.Run(new TrayApplicationContext());
                 Log("Application.Run exited normally.");
             }
             catch (Exception ex)
@@ -116,27 +113,6 @@ namespace OmniBackupLauncher
                 Cleanup();
                 Log("Cleanup finished.");
             }
-        }
-
-        private static void BringExistingInstanceToFront()
-        {
-            try
-            {
-                Process current = Process.GetCurrentProcess();
-                foreach (Process p in Process.GetProcessesByName(current.ProcessName))
-                {
-                    if (p.Id != current.Id && p.MainWindowHandle != IntPtr.Zero)
-                    {
-                        ShowWindow(p.MainWindowHandle, 9); // SW_RESTORE
-                        SetForegroundWindow(p.MainWindowHandle);
-                        return;
-                    }
-                }
-
-                // If existing OmniBackup instance is in tray or background, bring its browser window to front or open it
-                BringBrowserAppToFrontOrOpen();
-            }
-            catch { }
         }
 
         public static void LoadAppIcon()
@@ -259,10 +235,9 @@ namespace OmniBackupLauncher
             try
             {
                 HttpWebRequest req = (HttpWebRequest)WebRequest.Create(url);
-                req.Proxy = null;
-                req.Timeout = 1000;
-                req.ReadWriteTimeout = 1000;
+                req.Timeout = 1200;
                 req.Method = "GET";
+                req.Proxy = null;
                 using (HttpWebResponse resp = (HttpWebResponse)req.GetResponse())
                 {
                     return (resp.StatusCode == HttpStatusCode.OK);
@@ -278,12 +253,12 @@ namespace OmniBackupLauncher
         {
             TrayMenu = new ContextMenuStrip();
 
-            ToolStripMenuItem titleItem = new ToolStripMenuItem("OmniBackup Enterprise Cyber Vault");
+            ToolStripMenuItem titleItem = new ToolStripMenuItem("OmniBackup Enterprise Cyber Vault v2.8.7");
             titleItem.Font = new Font("Segoe UI", 9f, FontStyle.Bold);
             titleItem.Enabled = false;
             TrayMenu.Items.Add(titleItem);
 
-            ToolStripMenuItem statusItem = new ToolStripMenuItem("Durum: Canlı Koruma Aktif (Yerel Port 3060)");
+            ToolStripMenuItem statusItem = new ToolStripMenuItem("Durum: Canlı Koruma Aktif (Port 3060)");
             statusItem.ForeColor = Color.DarkGreen;
             statusItem.Enabled = false;
             TrayMenu.Items.Add(statusItem);
@@ -291,7 +266,7 @@ namespace OmniBackupLauncher
             TrayMenu.Items.Add(new ToolStripSeparator());
 
             ToolStripMenuItem openItem = new ToolStripMenuItem("🛡️ Program Penceresini Aç", null, (s, e) => {
-                OpenMainWindow();
+                OpenAppWindow();
             });
             openItem.Font = new Font("Segoe UI", 9f, FontStyle.Bold);
             TrayMenu.Items.Add(openItem);
@@ -307,10 +282,7 @@ namespace OmniBackupLauncher
                 catch { }
                 Thread.Sleep(500);
                 EnsureServerStarted();
-                if (AppWindow != null && !AppWindow.IsDisposed)
-                {
-                    AppWindow.Reload();
-                }
+                OpenAppWindow();
             });
             TrayMenu.Items.Add(restartItem);
 
@@ -327,16 +299,14 @@ namespace OmniBackupLauncher
             TrayIcon.ContextMenuStrip = TrayMenu;
             TrayIcon.Visible = true;
 
-            // Double-click tray icon to immediately open program window
+            // Double-click or single-click tray icon to immediately open program window
             TrayIcon.DoubleClick += (s, e) => {
-                OpenMainWindow();
+                OpenAppWindow();
             };
-
-            // Single left-click tray icon to open program window
             TrayIcon.MouseClick += (s, e) => {
                 if (e.Button == MouseButtons.Left)
                 {
-                    OpenMainWindow();
+                    OpenAppWindow();
                 }
             };
 
@@ -348,156 +318,101 @@ namespace OmniBackupLauncher
             TrayAnimTimer.Tick += (s, e) => {
                 try
                 {
+                    AnimAngle = (AnimAngle + 18) % 360;
                     AnimFrame++;
-                    AnimAngle = (AnimAngle + 22) % 360;
 
-                    // Dynamic multi-color cyber palette cycling smoothly over time
-                    Color[] cyberColors = new Color[] {
-                        Color.FromArgb(0, 240, 255),    // Vivid Cyan
-                        Color.FromArgb(16, 230, 110),   // Electric Emerald
-                        Color.FromArgb(59, 130, 246),   // Neon Cyber Blue
-                        Color.FromArgb(236, 72, 153),   // Cyber Pink
-                        Color.FromArgb(245, 158, 11)    // Radiant Amber Gold
-                    };
-
-                    int cIdx = (AnimFrame / 5) % cyberColors.Length;
-                    int nextCIdx = (cIdx + 1) % cyberColors.Length;
-                    Color primaryColor = cyberColors[cIdx];
-                    Color secondaryColor = cyberColors[nextCIdx];
-
-                    using (Bitmap bmp = new Bitmap(32, 32))
+                    Bitmap bmp = new Bitmap(32, 32);
+                    using (Graphics g = Graphics.FromImage(bmp))
                     {
-                        using (Graphics g = Graphics.FromImage(bmp))
+                        g.SmoothingMode = SmoothingMode.AntiAlias;
+                        g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+                        g.Clear(Color.Transparent);
+
+                        // Draw rotating active backup halo
+                        using (Matrix m = new Matrix())
                         {
-                            g.SmoothingMode = SmoothingMode.AntiAlias;
-                            g.PixelOffsetMode = PixelOffsetMode.HighQuality;
-                            g.Clear(Color.Transparent);
-
-                            // Draw base shield icon centered in 20x20
-                            if (AppIcon != null)
+                            m.RotateAt(AnimAngle, new PointF(16f, 16f));
+                            g.Transform = m;
+                            using (Pen ringPen = new Pen(Color.FromArgb(0, 190, 255), 3.5f))
                             {
-                                g.DrawIcon(AppIcon, new Rectangle(6, 6, 20, 20));
+                                ringPen.DashStyle = DashStyle.Dash;
+                                g.DrawEllipse(ringPen, 3, 3, 26, 26);
                             }
-                            else
-                            {
-                                using (Brush b = new SolidBrush(Color.FromArgb(30, 41, 59)))
-                                {
-                                    g.FillEllipse(b, 6, 6, 20, 20);
-                                }
-                            }
-
-                            // 1. Primary Sweeping Laser Radar Arc (Primary Color)
-                            using (Pen p1 = new Pen(primaryColor, 3f))
-                            {
-                                p1.StartCap = LineCap.Round;
-                                p1.EndCap = LineCap.Round;
-                                g.DrawArc(p1, 2, 2, 27, 27, AnimAngle, 110);
-                            }
-
-                            // 2. Opposing Counter-Sweep Arc (Secondary Color)
-                            using (Pen p2 = new Pen(secondaryColor, 2f))
-                            {
-                                p2.StartCap = LineCap.Round;
-                                p2.EndCap = LineCap.Round;
-                                g.DrawArc(p2, 2, 2, 27, 27, (AnimAngle + 180) % 360, 80);
-                            }
-
-                            // 3. Orbiting Data Packet 1 (Primary Head)
-                            double rad1 = (AnimAngle + 110) * Math.PI / 180.0;
-                            int dot1X = (int)(15.5 + 13.5 * Math.Cos(rad1));
-                            int dot1Y = (int)(15.5 + 13.5 * Math.Sin(rad1));
-                            using (Brush dotBrush1 = new SolidBrush(Color.White))
-                            {
-                                g.FillEllipse(dotBrush1, dot1X - 2, dot1Y - 2, 5, 5);
-                            }
-
-                            // 4. Orbiting Data Packet 2 (Secondary Head)
-                            double rad2 = ((AnimAngle + 180 + 80) % 360) * Math.PI / 180.0;
-                            int dot2X = (int)(15.5 + 13.5 * Math.Cos(rad2));
-                            int dot2Y = (int)(15.5 + 13.5 * Math.Sin(rad2));
-                            using (Brush dotBrush2 = new SolidBrush(secondaryColor))
-                            {
-                                g.FillEllipse(dotBrush2, dot2X - 1, dot2Y - 1, 4, 4);
-                            }
+                            g.ResetTransform();
                         }
 
-                        IntPtr hIcon = bmp.GetHicon();
-                        Icon frameIcon = Icon.FromHandle(hIcon);
-                        TrayIcon.Icon = frameIcon;
-
-                        string shortName = string.IsNullOrEmpty(CurrentRunningJobName) ? "Yedekleme" : CurrentRunningJobName;
-                        if (shortName.Length > 20) shortName = shortName.Substring(0, 18) + "..";
-                        string tip = string.Format("⚡ Yedekleniyor (%{0}): {1}", CurrentRunningPercent, shortName);
-                        if (tip.Length > 63) tip = tip.Substring(0, 60) + "...";
-                        TrayIcon.Text = tip;
-
-                        if (LastIconHandle != IntPtr.Zero)
+                        // Inner vibrant Shield
+                        using (GraphicsPath path = new GraphicsPath())
                         {
-                            DestroyIcon(LastIconHandle);
+                            path.AddPolygon(new PointF[] {
+                                new PointF(16, 7),
+                                new PointF(23, 10),
+                                new PointF(23, 18),
+                                new PointF(16, 25),
+                                new PointF(9, 18),
+                                new PointF(9, 10)
+                            });
+                            using (LinearGradientBrush fillBrush = new LinearGradientBrush(new Rectangle(9, 7, 14, 18), Color.FromArgb(0, 230, 120), Color.FromArgb(0, 140, 255), 45f))
+                            {
+                                g.FillPath(fillBrush, path);
+                            }
+                            using (Pen borderPen = new Pen(Color.White, 1.2f))
+                            {
+                                g.DrawPath(borderPen, path);
+                            }
                         }
-                        LastIconHandle = hIcon;
                     }
+
+                    IntPtr hIcon = bmp.GetHicon();
+                    Icon animatedIcon = Icon.FromHandle(hIcon);
+                    TrayIcon.Icon = animatedIcon;
+
+                    if (LastIconHandle != IntPtr.Zero)
+                    {
+                        DestroyIcon(LastIconHandle);
+                    }
+                    LastIconHandle = hIcon;
                 }
                 catch { }
             };
 
-            // 2. Background Poller: Checks if any backup is actively running (500ms fast check)
+            // 2. Backup Watcher Poller: Check every 1.5s if a live backup is active
             BackupWatcherTimer = new System.Windows.Forms.Timer();
-            BackupWatcherTimer.Interval = 500;
+            BackupWatcherTimer.Interval = 1500;
             BackupWatcherTimer.Tick += (s, e) => {
-                CheckBackupStatus();
+                ThreadPool.QueueUserWorkItem((state) => {
+                    CheckLiveBackupStatus();
+                });
             };
             BackupWatcherTimer.Start();
         }
 
-        private static void CheckBackupStatus()
+        private static void CheckLiveBackupStatus()
         {
-            Task.Factory.StartNew(() => {
-                try
+            try
+            {
+                HttpWebRequest req = (HttpWebRequest)WebRequest.Create("http://127.0.0.1:3060/api/backup-running");
+                req.Timeout = 1000;
+                req.Proxy = null;
+                using (HttpWebResponse resp = (HttpWebResponse)req.GetResponse())
                 {
-                    HttpWebRequest req = (HttpWebRequest)WebRequest.Create("http://127.0.0.1:3060/api/backup-running");
-                    req.Proxy = null;
-                    req.Timeout = 1000;
-                    req.ReadWriteTimeout = 1000;
-                    using (HttpWebResponse resp = (HttpWebResponse)req.GetResponse())
-                    using (StreamReader reader = new StreamReader(resp.GetResponseStream()))
+                    if (resp.StatusCode == HttpStatusCode.OK)
                     {
-                        string json = reader.ReadToEnd();
-                        bool running = json.Contains("\"isRunning\":true");
-
-                        int pIdx = json.IndexOf("\"percent\":");
-                        if (pIdx > -1)
+                        using (StreamReader sr = new StreamReader(resp.GetResponseStream()))
                         {
-                            int comma = json.IndexOfAny(new char[] { ',', '}' }, pIdx);
-                            if (comma > -1)
+                            string json = sr.ReadToEnd();
+                            bool running = json.Contains("\"isRunning\":true");
+                            if (TrayIcon != null)
                             {
-                                string pStr = json.Substring(pIdx + 10, comma - (pIdx + 10)).Trim();
-                                int parsed;
-                                if (int.TryParse(pStr, out parsed)) CurrentRunningPercent = parsed;
+                                TrayIcon.ContextMenuStrip.BeginInvoke(new Action(() => {
+                                    UpdateTrayBackupState(running);
+                                }));
                             }
-                        }
-                        int nameIdx = json.IndexOf("\"jobName\":\"");
-                        if (nameIdx > -1)
-                        {
-                            int quoteEnd = json.IndexOf("\"", nameIdx + 11);
-                            if (quoteEnd > -1)
-                            {
-                                CurrentRunningJobName = json.Substring(nameIdx + 11, quoteEnd - (nameIdx + 11));
-                            }
-                        }
-
-                        if (TrayIcon != null && TrayIcon.ContextMenuStrip != null && TrayIcon.ContextMenuStrip.InvokeRequired)
-                        {
-                            TrayIcon.ContextMenuStrip.BeginInvoke(new Action(() => UpdateTrayBackupState(running)));
-                        }
-                        else
-                        {
-                            UpdateTrayBackupState(running);
                         }
                     }
                 }
-                catch { }
-            });
+            }
+            catch { }
         }
 
         private static void UpdateTrayBackupState(bool running)
@@ -525,278 +440,25 @@ namespace OmniBackupLauncher
                 {
                     TrayIcon.Icon = AppIcon;
                     TrayIcon.Text = "OmniBackup Enterprise Cyber Vault - Korumada";
-                    TrayIcon.ShowBalloonTip(3000, "OmniBackup", "Yedekleme başarıyla tamamlandı!", ToolTipIcon.Info);
                 }
                 if (StatusMenuItem != null)
                 {
-                    StatusMenuItem.Text = "Durum: Canlı Koruma Aktif (Yerel Port 3060)";
+                    StatusMenuItem.Text = "Durum: Canlı Koruma Aktif (Port 3060)";
                     StatusMenuItem.ForeColor = Color.DarkGreen;
                 }
             }
         }
 
-        public static void ExitApplication()
-        {
-            Cleanup();
-            if (TrayIcon != null)
-            {
-                TrayIcon.Visible = false;
-                TrayIcon.Dispose();
-            }
-            Application.Exit();
-            Environment.Exit(0);
-        }
-
-        public static void OpenMainWindow()
+        public static void OpenAppWindow()
         {
             try
             {
                 EnsureServerStarted();
 
-                if (AppWindow != null && !AppWindow.IsDisposed)
+                // If already open, bring to front
+                if (BringExistingInstanceToFront())
                 {
-                    AppWindow.Opacity = 1;
-                    AppWindow.ShowInTaskbar = true;
-                    AppWindow.Visible = true;
-                    AppWindow.Show();
-                    AppWindow.WindowState = FormWindowState.Normal;
-                    AppWindow.BringToFront();
-                    AppWindow.Activate();
-                    SetForegroundWindow(AppWindow.Handle);
-                }
-
-                BringBrowserAppToFrontOrOpen();
-            }
-            catch { }
-        }
-
-        public static void BringBrowserAppToFrontOrOpen()
-        {
-            try
-            {
-                bool windowFound = false;
-                foreach (Process p in Process.GetProcesses())
-                {
-                    try
-                    {
-                        if (p.MainWindowHandle != IntPtr.Zero && !string.IsNullOrEmpty(p.MainWindowTitle))
-                        {
-                            string t = p.MainWindowTitle;
-                            if (t.IndexOf("OmniBackup", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                                t.IndexOf("127.0.0.1", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                                t.IndexOf("Cyber Vault", StringComparison.OrdinalIgnoreCase) >= 0)
-                            {
-                                ShowWindow(p.MainWindowHandle, 9); // SW_RESTORE
-                                SetForegroundWindow(p.MainWindowHandle);
-                                windowFound = true;
-                                break;
-                            }
-                        }
-                    }
-                    catch { }
-                }
-
-                if (!windowFound)
-                {
-                    string browserExe = MainWindow.FindChromiumBrowserPath();
-                    string appUrl = "http://127.0.0.1:3060";
-                    string profileDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "OmniBackup", "DesktopProfile");
-
-                    if (!string.IsNullOrEmpty(browserExe))
-                    {
-                        ProcessStartInfo psi = new ProcessStartInfo();
-                        psi.FileName = browserExe;
-                        psi.Arguments = string.Format(
-                            "--app=\"{0}\" --user-data-dir=\"{1}\" --window-size=1440,900 --disable-features=TranslateUI --disable-extensions --no-first-run",
-                            appUrl,
-                            profileDir
-                        );
-                        psi.UseShellExecute = false;
-                        Process.Start(psi);
-                    }
-                    else
-                    {
-                        Process.Start(appUrl);
-                    }
-                }
-            }
-            catch { }
-        }
-
-        public static void Cleanup()
-        {
-            try
-            {
-                if (TrayAnimTimer != null) { TrayAnimTimer.Stop(); TrayAnimTimer.Dispose(); TrayAnimTimer = null; }
-                if (BackupWatcherTimer != null) { BackupWatcherTimer.Stop(); BackupWatcherTimer.Dispose(); BackupWatcherTimer = null; }
-                if (LastIconHandle != IntPtr.Zero) { DestroyIcon(LastIconHandle); LastIconHandle = IntPtr.Zero; }
-
-                if (ServerProcess != null && !ServerProcess.HasExited)
-                {
-                    ServerProcess.Kill();
-                }
-            }
-            catch { }
-
-            if (SingleInstanceMutex != null)
-            {
-                try { SingleInstanceMutex.ReleaseMutex(); } catch { }
-                SingleInstanceMutex = null;
-            }
-        }
-    }
-
-    public class MainWindow : Form
-    {
-        private WebView2 webView;
-        private Label lblLoading;
-        private bool isExiting = false;
-
-        public MainWindow()
-        {
-            InitializeComponent();
-            this.Shown += (s, e) => {
-                InitWebViewAsync();
-            };
-        }
-
-        private void InitializeComponent()
-        {
-            this.Text = "OmniBackup Enterprise Cyber Vault v2.8.7";
-            this.Size = new Size(1440, 900);
-            this.MinimumSize = new Size(1024, 680);
-            this.StartPosition = FormStartPosition.CenterScreen;
-            this.BackColor = Color.FromArgb(3, 7, 18); // Dark cyber background
-            this.ForeColor = Color.White;
-            this.Icon = Program.AppIcon;
-
-            // Loading placeholder label
-            lblLoading = new Label();
-            lblLoading.Text = "OmniBackup Enterprise Cyber Vault Başlatılıyor...\nLütfen Bekleyiniz...";
-            lblLoading.Font = new Font("Segoe UI Semibold", 12f);
-            lblLoading.ForeColor = Color.FromArgb(56, 189, 248);
-            lblLoading.TextAlign = ContentAlignment.MiddleCenter;
-            lblLoading.Dock = DockStyle.Fill;
-            this.Controls.Add(lblLoading);
-
-            // WebView2 Control
-            webView = new WebView2();
-            webView.Dock = DockStyle.Fill;
-            webView.Visible = false;
-            this.Controls.Add(webView);
-
-            this.FormClosing += MainWindow_FormClosing;
-        }
-
-        private async void InitWebViewAsync()
-        {
-            try
-            {
-                Program.Log("InitWebViewAsync started.");
-                string userDataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "OmniBackup", "WebView2Data");
-                if (!Directory.Exists(userDataDir))
-                {
-                    Directory.CreateDirectory(userDataDir);
-                }
-
-                Program.Log("Creating CoreWebView2Environment at: " + userDataDir);
-                CoreWebView2Environment env = await CoreWebView2Environment.CreateAsync(null, userDataDir, null);
-                Program.Log("CoreWebView2Environment created. Ensuring CoreWebView2Async...");
-                await webView.EnsureCoreWebView2Async(env);
-                Program.Log("EnsureCoreWebView2Async completed successfully.");
-
-                // Configure Desktop App Experience (No URL Bar, No Status Bar, Clean UI)
-                webView.CoreWebView2.Settings.IsStatusBarEnabled = false;
-                webView.CoreWebView2.Settings.AreDevToolsEnabled = false;
-                webView.CoreWebView2.Settings.IsBuiltInErrorPageEnabled = true;
-                webView.CoreWebView2.Settings.AreDefaultContextMenusEnabled = false;
-
-                // Listen for navigation completed
-                webView.NavigationCompleted += (s, e) => {
-                    Program.Log(string.Format("NavigationCompleted: IsSuccess={0}, WebErrorStatus={1}", e.IsSuccess, e.WebErrorStatus));
-                    if (!e.IsSuccess)
-                    {
-                        System.Windows.Forms.Timer retryTimer = new System.Windows.Forms.Timer();
-                        retryTimer.Interval = 1500;
-                        retryTimer.Tick += (ts, te) => {
-                            retryTimer.Stop();
-                            retryTimer.Dispose();
-                            Program.EnsureServerStarted();
-                            try
-                            {
-                                if (webView != null && !webView.IsDisposed && webView.CoreWebView2 != null)
-                                {
-                                    Program.Log("Retrying navigation to http://127.0.0.1:3060");
-                                    webView.Source = new Uri("http://127.0.0.1:3060");
-                                }
-                            }
-                            catch { }
-                        };
-                        retryTimer.Start();
-                        return;
-                    }
-                    lblLoading.Visible = false;
-                    webView.Visible = true;
-                    this.Opacity = 1;
-                    this.ShowInTaskbar = true;
-                    this.WindowState = FormWindowState.Normal;
-                    this.BringToFront();
-                    this.Activate();
-                    Program.Log("Main Form displayed with WebView2 content.");
-                };
-
-                // Navigate directly to the local server
-                Program.Log("Navigating webView.Source to http://127.0.0.1:3060");
-                webView.Source = new Uri("http://127.0.0.1:3060");
-            }
-            catch (Exception ex)
-            {
-                Program.Log("InitWebViewAsync EXCEPTION: " + ex.ToString());
-                SafeFallbackLaunch();
-            }
-        }
-
-        private void SafeFallbackLaunch()
-        {
-            try
-            {
-                Program.Log("Triggering SafeFallbackLaunch...");
-                if (this.IsHandleCreated && this.InvokeRequired)
-                {
-                    this.BeginInvoke(new Action(FallbackLaunch));
-                }
-                else
-                {
-                    FallbackLaunch();
-                }
-            }
-            catch (Exception ex)
-            {
-                Program.Log("SafeFallbackLaunch EXCEPTION: " + ex.ToString());
-                FallbackLaunch();
-            }
-        }
-
-        private void FallbackLaunch()
-        {
-            try
-            {
-                Program.Log("Executing FallbackLaunch browser popup...");
-                // Hide this empty container so user only sees the clean app window
-                this.Opacity = 0;
-                this.ShowInTaskbar = false;
-                this.Visible = false;
-                this.Hide();
-
-                // Ensure server is verified running before opening browser window
-                Program.EnsureServerStarted();
-                for (int i = 0; i < 20; i++)
-                {
-                    if (Program.IsServerRunning("http://127.0.0.1:3060/api/stats"))
-                    {
-                        break;
-                    }
-                    Thread.Sleep(500);
+                    return;
                 }
 
                 string browserExe = FindChromiumBrowserPath();
@@ -814,17 +476,47 @@ namespace OmniBackupLauncher
                     );
                     psi.UseShellExecute = false;
                     Process.Start(psi);
+                    Log("Launched Chromium App Window via: " + browserExe);
                 }
                 else
                 {
                     Process.Start(appUrl);
+                    Log("Launched default browser for: " + appUrl);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log("OpenAppWindow Exception: " + ex.ToString());
+            }
+        }
+
+        public static bool BringExistingInstanceToFront()
+        {
+            try
+            {
+                foreach (Process p in Process.GetProcesses())
+                {
+                    try
+                    {
+                        if (p.MainWindowHandle != IntPtr.Zero && !string.IsNullOrEmpty(p.MainWindowTitle))
+                        {
+                            string t = p.MainWindowTitle;
+                            if (t.IndexOf("OmniBackup", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                t.IndexOf("127.0.0.1:3060", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                t.IndexOf("localhost:3060", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                t.IndexOf("Cyber Vault", StringComparison.OrdinalIgnoreCase) >= 0)
+                            {
+                                ShowWindow(p.MainWindowHandle, 9); // SW_RESTORE
+                                SetForegroundWindow(p.MainWindowHandle);
+                                return true;
+                            }
+                        }
+                    }
+                    catch { }
                 }
             }
             catch { }
-            finally
-            {
-                this.Hide();
-            }
+            return false;
         }
 
         public static string FindChromiumBrowserPath()
@@ -835,8 +527,10 @@ namespace OmniBackupLauncher
                 @"C:\Program Files\Microsoft\Edge\Application\msedge.exe",
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), @"Microsoft\Edge\Application\msedge.exe"),
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), @"Microsoft\Edge\Application\msedge.exe"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"Microsoft\Edge\Application\msedge.exe"),
                 @"C:\Program Files\Google\Chrome\Application\chrome.exe",
-                @"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
+                @"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"Google\Chrome\Application\chrome.exe")
             };
 
             foreach (string p in possiblePaths)
@@ -846,34 +540,52 @@ namespace OmniBackupLauncher
             return null;
         }
 
-        public void Reload()
+        public static void ExitApplication()
         {
-            if (webView != null && webView.CoreWebView2 != null)
+            Cleanup();
+            if (TrayIcon != null)
             {
-                webView.Reload();
+                TrayIcon.Visible = false;
+                TrayIcon.Dispose();
             }
+            Application.Exit();
+            Environment.Exit(0);
         }
 
-        private void MainWindow_FormClosing(object sender, FormClosingEventArgs e)
+        public static void Cleanup()
         {
-            if (!isExiting && e.CloseReason == CloseReason.UserClosing)
+            try
             {
-                e.Cancel = true;
-                this.Hide();
-                if (Program.TrayIcon != null)
+                if (TrayAnimTimer != null)
                 {
-                    Program.TrayIcon.ShowBalloonTip(
-                        3000,
-                        "OmniBackup Enterprise Cyber Vault",
-                        "Uygulama arka planda ve sistem tepsisinde çalışmaya devam ediyor. Görev çubuğu simgesine çift tıklayarak tekrar açabilirsiniz.",
-                        ToolTipIcon.Info
-                    );
+                    TrayAnimTimer.Stop();
+                    TrayAnimTimer.Dispose();
+                }
+                if (BackupWatcherTimer != null)
+                {
+                    BackupWatcherTimer.Stop();
+                    BackupWatcherTimer.Dispose();
+                }
+                if (LastIconHandle != IntPtr.Zero)
+                {
+                    DestroyIcon(LastIconHandle);
+                    LastIconHandle = IntPtr.Zero;
+                }
+                if (SingleInstanceMutex != null)
+                {
+                    SingleInstanceMutex.ReleaseMutex();
+                    SingleInstanceMutex.Dispose();
                 }
             }
-            else
-            {
-                Program.ExitApplication();
-            }
+            catch { }
+        }
+    }
+
+    public class TrayApplicationContext : ApplicationContext
+    {
+        public TrayApplicationContext()
+        {
+            // Keeps the tray application running smoothly in background
         }
     }
 }
