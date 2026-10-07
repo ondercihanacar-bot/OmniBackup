@@ -1637,7 +1637,7 @@ const getInstalledVersion = () => {
       }
     }
   } catch (e) { }
-  return "2.8.6";
+  return "2.8.7";
 };
 
 // Helper to fetch JSON from remote URL with redirect support
@@ -1818,15 +1818,14 @@ app.post('/api/update/apply', async (req, res) => {
   const updaterExe = path.join(projectRoot, 'scripts', 'OmniUpdater.exe');
 
   try {
-    // If local patch exists, copy to temp; otherwise download from remote master URL
-    if (fs.existsSync(localPatchSource)) {
+    // Download fresh patch from master/GitHub
+    const downloadTarget = (downloadUrl && downloadUrl.startsWith('http')) 
+      ? downloadUrl 
+      : `https://raw.githubusercontent.com/ondercihanacar-bot/OmniBackup/main/omni_patch.zip`;
+    
+    if (fs.existsSync(localPatchSource) && !downloadUrl) {
       fs.copyFileSync(localPatchSource, patchTempZip);
     } else {
-      // If client is downloading over network from master server or GitHub
-      const downloadTarget = downloadUrl && downloadUrl.startsWith('http') 
-        ? downloadUrl 
-        : `https://raw.githubusercontent.com/ondercihanacar-bot/OmniBackup/main/omni_patch.zip`;
-      
       await downloadWithRedirects(downloadTarget, patchTempZip);
     }
 

@@ -21,9 +21,6 @@ namespace OmniBackupUpdater
         public static extern bool GetClientRect(IntPtr hWnd, out RECT lpRect);
 
         [DllImport("user32.dll")]
-        public static extern IntPtr SendMessage(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
-
-        [DllImport("user32.dll")]
         public static extern bool PostMessage(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
 
         [StructLayout(LayoutKind.Sequential)]
@@ -42,7 +39,6 @@ namespace OmniBackupUpdater
         {
             try
             {
-                // Refresh main tray notification toolbar
                 IntPtr hTray = FindWindow("Shell_TrayWnd", null);
                 if (hTray != IntPtr.Zero)
                 {
@@ -58,7 +54,6 @@ namespace OmniBackupUpdater
                     }
                 }
 
-                // Refresh overflow tray notification toolbar (hidden icons flyout)
                 IntPtr hOverflow = FindWindow("NotifyIconOverflowWindow", null);
                 if (hOverflow != IntPtr.Zero)
                 {
@@ -92,12 +87,6 @@ namespace OmniBackupUpdater
         [STAThread]
         static void Main(string[] args)
         {
-            // Args:
-            // args[0] = target installation directory (e.g. C:\Program Files\OmniBackup or current AppDomain)
-            // args[1] = zip patch path (e.g. C:\Users\...\AppData\Local\Temp\omni_patch.zip)
-            // args[2] = parent process ID to wait for exit (optional)
-            // args[3] = relaunch executable path (e.g. C:\Program Files\OmniBackup\OmniBackup.exe)
-
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
@@ -126,6 +115,7 @@ namespace OmniBackupUpdater
         private string patchZip;
         private int parentPid;
         private string relaunchExe;
+        private int currentPid;
 
         public UpdateProgressForm(string targetDir, string patchZip, int parentPid, string relaunchExe)
         {
@@ -133,21 +123,32 @@ namespace OmniBackupUpdater
             this.patchZip = patchZip;
             this.parentPid = parentPid;
             this.relaunchExe = relaunchExe;
+            this.currentPid = Process.GetCurrentProcess().Id;
 
             InitializeUI();
             this.Shown += (s, e) => StartUpdateProcess();
         }
 
+        private void Log(string msg)
+        {
+            try
+            {
+                string logFile = Path.Combine(targetDir, "updater.log");
+                File.AppendAllText(logFile, string.Format("[{0:yyyy-MM-dd HH:mm:ss.fff}] {1}\r\n", DateTime.Now, msg));
+            }
+            catch { }
+        }
+
         private void InitializeUI()
         {
-            this.Text = "OmniBackup Enterprise - Canlı Sistem Güncellemesi";
+            this.Text = "OmniBackup Enterprise Updater Engine";
             this.ClientSize = new Size(520, 220);
             this.StartPosition = FormStartPosition.CenterScreen;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.TopMost = true;
-            this.BackColor = Color.FromArgb(10, 17, 38); // Acronis Deep Navy
+            this.BackColor = Color.FromArgb(10, 17, 38);
             this.ForeColor = Color.White;
             this.Font = new Font("Segoe UI", 9.5f, FontStyle.Regular);
 
@@ -175,7 +176,7 @@ namespace OmniBackupUpdater
             this.Controls.Add(progressBar);
 
             lblDetails = new Label();
-            lblDetails.Text = "Veri tabanı ve görev ayarları korunarak çekirdek dosyalar yenileniyor.";
+            lblDetails.Text = "Veritabanı ve görev ayarları korunarak çekirdek dosyalar yenileniyor.";
             lblDetails.Font = new Font("Segoe UI", 8.5f, FontStyle.Italic);
             lblDetails.ForeColor = Color.FromArgb(140, 160, 190);
             lblDetails.Location = new Point(26, 130);
@@ -189,16 +190,16 @@ namespace OmniBackupUpdater
             {
                 try
                 {
+                    Log("=== OmniUpdater Started ===");
+                    Log(string.Format("TargetDir={0}, PatchZip={1}, ParentPid={2}, RelaunchExe={3}", targetDir, patchZip, parentPid, relaunchExe));
+
                     UpdateUI(15, "OmniBackup ana penceresi ve servisler kapatılıyor...");
                     
-                    // 1. Terminate OmniBackup.exe desktop instances to release mutex and free files
+                    // 1. Terminate OmniBackup.exe desktop launcher instances (NEVER kill self!)
                     KillProcessByName("OmniBackup");
 
-                    // 2. Also close any browser app windows showing OmniBackup
-                    CloseOmniBackupAppWindows();
-
-                    // 3. Terminate or wait for Parent Process (Node.js)
-                    if (parentPid > 0)
+                    // 2. Terminate Parent Process (Node.js) if passed
+                    if (parentPid > 0 && parentPid != currentPid)
                     {
                         try
                         {
@@ -212,9 +213,10 @@ namespace OmniBackupUpdater
                         catch { }
                     }
 
-                    // 4. Also stop any node server processes running inside targetDir
-                    KillNodeInTargetDir(targetDir);
-                    Thread.Sleep(1500);
+                    // 3. Stop all node and webview processes in targetDir
+                    KillNodeProcesses();
+                    KillWebViewProcesses();
+                    Thread.Sleep(1000);
 
                     UpdateUI(35, "Güncelleme paketi açılıyor ve bütünlük doğrulanıyor...");
                     if (!File.Exists(patchZip))
@@ -222,16 +224,25 @@ namespace OmniBackupUpdater
                         throw new FileNotFoundException("Güncelleme yama dosyası bulunamadı: " + patchZip);
                     }
 
+                    FileInfo fi = new FileInfo(patchZip);
+                    Log(string.Format("Patch zip file found. Size: {0} bytes", fi.Length));
+                    if (fi.Length < 1000)
+                    {
+                        throw new InvalidDataException("Güncelleme paketi bozuk veya eksik indirildi.");
+                    }
+
                     UpdateUI(50, "Yeni sürüm dosyaları sisteme kopyalanıyor...");
                     using (ZipArchive archive = ZipFile.OpenRead(patchZip))
                     {
                         int totalEntries = archive.Entries.Count;
                         int processed = 0;
+                        Log(string.Format("Archive opened successfully. Total entries: {0}", totalEntries));
 
                         foreach (ZipArchiveEntry entry in archive.Entries)
                         {
-                            // SAFETY: NEVER OVERWRITE USER DATABASE, SAVED JOBS, SETTINGS OR USER STORAGE
                             string entryName = entry.FullName.Replace('/', '\\');
+
+                            // SAFETY: NEVER OVERWRITE USER DATABASE, CUSTOM BACKUP JOBS, SETTINGS OR USER STORAGE
                             if (entryName.StartsWith("server\\data\\", StringComparison.OrdinalIgnoreCase) ||
                                 entryName.StartsWith("data\\", StringComparison.OrdinalIgnoreCase) ||
                                 entryName.Equals("server\\data", StringComparison.OrdinalIgnoreCase) ||
@@ -254,18 +265,31 @@ namespace OmniBackupUpdater
 
                             if (!string.IsNullOrEmpty(entry.Name)) // If it's a file
                             {
-                                // Retry up to 5 times for locked files
-                                for (int i = 0; i < 5; i++)
+                                bool extracted = false;
+                                Exception lastEx = null;
+
+                                // Retry up to 10 times with backoff if file is temporarily locked
+                                for (int i = 0; i < 10; i++)
                                 {
                                     try
                                     {
                                         entry.ExtractToFile(destPath, true);
+                                        extracted = true;
                                         break;
                                     }
-                                    catch
+                                    catch (Exception ex)
                                     {
+                                        lastEx = ex;
+                                        KillProcessByName("OmniBackup");
+                                        KillNodeProcesses();
+                                        KillWebViewProcesses();
                                         Thread.Sleep(300);
                                     }
+                                }
+
+                                if (!extracted && lastEx != null)
+                                {
+                                    Log(string.Format("WARN: Could not extract {0}: {1}", entryName, lastEx.Message));
                                 }
                             }
 
@@ -276,7 +300,8 @@ namespace OmniBackupUpdater
                     }
 
                     UpdateUI(90, "Önbellek temizleniyor ve servis yapılandırması tamamlanıyor...");
-                    Thread.Sleep(1000);
+                    Log("Extraction completed successfully.");
+                    Thread.Sleep(500);
 
                     // Clean temp zip
                     try
@@ -285,8 +310,9 @@ namespace OmniBackupUpdater
                     }
                     catch { }
 
-                    UpdateUI(100, "Güncelleme tamamlandı! OmniBackup yeniden başlatılıyor...");
-                    Thread.Sleep(1200);
+                    UpdateUI(100, "Güncelleme tamamlandı! OmniBackup başlatılıyor...");
+                    Log("Launching updated OmniBackup executable: " + relaunchExe);
+                    Thread.Sleep(800);
 
                     // Launch updated OmniBackup.exe
                     if (File.Exists(relaunchExe))
@@ -297,11 +323,25 @@ namespace OmniBackupUpdater
                         psi.UseShellExecute = true;
                         Process.Start(psi);
                     }
+                    else
+                    {
+                        string fallbackExe = Path.Combine(targetDir, "OmniBackup.exe");
+                        if (File.Exists(fallbackExe))
+                        {
+                            ProcessStartInfo psi = new ProcessStartInfo();
+                            psi.FileName = fallbackExe;
+                            psi.WorkingDirectory = targetDir;
+                            psi.UseShellExecute = true;
+                            Process.Start(psi);
+                        }
+                    }
 
+                    Log("Update finished successfully. Exiting updater.");
                     this.Invoke(new Action(() => this.Close()));
                 }
                 catch (Exception ex)
                 {
+                    Log("FATAL ERROR in updater: " + ex.ToString());
                     this.Invoke(new Action(() =>
                     {
                         MessageBox.Show("Güncelleme sırasında bir hata oluştu:\n" + ex.Message, "Güncelleme Hatası", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -320,6 +360,7 @@ namespace OmniBackupUpdater
             {
                 foreach (Process p in Process.GetProcessesByName(processName))
                 {
+                    if (p.Id == currentPid) continue; // SAFETY: NEVER KILL SELF!
                     try
                     {
                         if (p.MainWindowHandle != IntPtr.Zero)
@@ -330,94 +371,53 @@ namespace OmniBackupUpdater
                     catch { }
                 }
 
-                Thread.Sleep(500);
+                Thread.Sleep(300);
 
                 foreach (Process p in Process.GetProcessesByName(processName))
                 {
+                    if (p.Id == currentPid) continue;
                     try
                     {
                         if (!p.HasExited)
                         {
                             p.Kill();
-                            p.WaitForExit(1500);
+                            p.WaitForExit(1000);
                         }
                     }
                     catch { }
                 }
 
-                // Immediately sweep system tray to eliminate any ghost tray icons
                 Program.RefreshNotificationArea();
             }
             catch { }
         }
 
-        private void CloseOmniBackupAppWindows()
-        {
-            try
-            {
-                foreach (Process p in Process.GetProcesses())
-                {
-                    try
-                    {
-                        bool shouldClose = false;
-                        if (p.MainWindowHandle != IntPtr.Zero && !string.IsNullOrEmpty(p.MainWindowTitle))
-                        {
-                            string t = p.MainWindowTitle;
-                            if (t.IndexOf("OmniBackup", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                                t.IndexOf("127.0.0.1", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                                t.IndexOf("localhost:3060", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                                t.IndexOf("Cyber Vault", StringComparison.OrdinalIgnoreCase) >= 0)
-                            {
-                                shouldClose = true;
-                            }
-                        }
-
-                        // Also check msedge / chrome / browser processes launched for OmniBackup
-                        if (!shouldClose && (p.ProcessName.Equals("msedge", StringComparison.OrdinalIgnoreCase) || p.ProcessName.Equals("chrome", StringComparison.OrdinalIgnoreCase)))
-                        {
-                            if (!string.IsNullOrEmpty(p.MainWindowTitle) && 
-                               (p.MainWindowTitle.IndexOf("OmniBackup", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                                p.MainWindowTitle.IndexOf("3060", StringComparison.OrdinalIgnoreCase) >= 0))
-                            {
-                                shouldClose = true;
-                            }
-                        }
-
-                        if (shouldClose)
-                        {
-                            try
-                            {
-                                p.CloseMainWindow();
-                                if (!p.WaitForExit(1000))
-                                {
-                                    p.Kill();
-                                }
-                            }
-                            catch
-                            {
-                                p.Kill();
-                            }
-                        }
-                    }
-                    catch { }
-                }
-
-                // Call RefreshNotificationArea again after windows close
-                Program.RefreshNotificationArea();
-            }
-            catch { }
-        }
-
-        private void KillNodeInTargetDir(string dir)
+        private void KillNodeProcesses()
         {
             try
             {
                 foreach (Process p in Process.GetProcessesByName("node"))
                 {
+                    if (p.Id == currentPid) continue;
                     try
                     {
-                        string pPath = p.MainModule.FileName;
-                        // Kill node processes
+                        p.Kill();
+                    }
+                    catch { }
+                }
+            }
+            catch { }
+        }
+
+        private void KillWebViewProcesses()
+        {
+            try
+            {
+                foreach (Process p in Process.GetProcessesByName("msedgewebview2"))
+                {
+                    if (p.Id == currentPid) continue;
+                    try
+                    {
                         p.Kill();
                     }
                     catch { }

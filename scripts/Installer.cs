@@ -81,17 +81,38 @@ namespace OmniBackupInstaller
         {
             try
             {
+                string pfPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "OmniBackup");
+                string localAppPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "OmniBackup");
+                string cPath = @"C:\OmniBackup";
+
+                // If already installed somewhere, upgrade the existing location
+                if (File.Exists(Path.Combine(pfPath, "OmniBackup.exe")))
+                {
+                    defaultPath = pfPath;
+                    return;
+                }
+                if (File.Exists(Path.Combine(localAppPath, "OmniBackup.exe")))
+                {
+                    defaultPath = localAppPath;
+                    return;
+                }
+                if (File.Exists(Path.Combine(cPath, "OmniBackup.exe")))
+                {
+                    defaultPath = cPath;
+                    return;
+                }
+
                 WindowsIdentity identity = WindowsIdentity.GetCurrent();
                 WindowsPrincipal principal = new WindowsPrincipal(identity);
                 bool isAdmin = principal.IsInRole(WindowsBuiltInRole.Administrator);
 
                 if (isAdmin)
                 {
-                    defaultPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "OmniBackup");
+                    defaultPath = pfPath;
                 }
                 else
                 {
-                    defaultPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "OmniBackup");
+                    defaultPath = localAppPath;
                 }
             }
             catch
@@ -776,8 +797,10 @@ namespace OmniBackupInstaller
                 string msgStopping = (currentLang == "tr") ? "Mevcut çalışan süreçler kontrol ediliyor..." : "Checking existing running processes...";
                 UpdateProgress(5, msgStopping);
                 KillProcessByName("OmniBackup");
+                KillProcessByName("node");
+                KillProcessByName("msedgewebview2");
                 KillPortProcess(3060);
-                Thread.Sleep(300);
+                Thread.Sleep(500);
 
                 string msgResolving = (currentLang == "tr") ? "Kurulum paketi çözümleniyor (omni_payload.zip)..." : "Resolving setup archive (omni_payload.zip)...";
                 UpdateProgress(10, msgResolving);
@@ -847,7 +870,21 @@ namespace OmniBackupInstaller
                                 string dir = Path.GetDirectoryName(destinationPath);
                                 if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
-                                entry.ExtractToFile(destinationPath, true);
+                                for (int retry = 0; retry < 5; retry++)
+                                {
+                                    try
+                                    {
+                                        entry.ExtractToFile(destinationPath, true);
+                                        break;
+                                    }
+                                    catch
+                                    {
+                                        KillProcessByName("OmniBackup");
+                                        KillProcessByName("node");
+                                        KillProcessByName("msedgewebview2");
+                                        Thread.Sleep(200);
+                                    }
+                                }
 
                                 if (count % 25 == 0 || count == totalEntries)
                                 {
