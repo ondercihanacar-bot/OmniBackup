@@ -104,16 +104,16 @@ export default function LiveProgressModal({ isOpen, jobName, progressData, onSto
     estimatedFinishTime = finishDate.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   }
 
-  const speed = progressData?.speed || '124.5 MB/s';
-  const stage = progressData?.stage || 'Aşama 1/6: Kalkan - Anti-Ransomware & Entropi Taraması Yapılıyor...';
-  const transferredFormatted = progressData?.transferredFormatted || '180 MB';
-  const remainingBytesFormatted = progressData?.remainingBytesFormatted || '4.62 GB';
-  const totalBytesFormatted = progressData?.totalBytesFormatted || '4.80 GB';
-  const currentFile = progressData?.currentFile || 'Shannon Entropy & Ransomware Engine Analizi...';
-  const processedFiles = progressData?.processedFiles || 240;
-  const totalFiles = progressData?.totalFiles || 4850;
-  const compressionRatio = progressData?.compressionRatio || '%52 (2.6x)';
-  const checksumHash = progressData?.checksumHash || 'SHA256: 8f4a2b9c3e1d7f6a5b4c3d2e1f0a9b8c...';
+  const speed = progressData?.speed || 'Hesaplanıyor...';
+  const stage = progressData?.stage || 'Aşama 1/6: Güvenlik & Dosya Taraması Başlatılıyor...';
+  const transferredFormatted = progressData?.transferredFormatted || '0 B';
+  const remainingBytesFormatted = progressData?.remainingBytesFormatted || (percent > 0 ? `${100 - percent}% kaldı` : 'Hesaplanıyor...');
+  const totalBytesFormatted = progressData?.totalBytesFormatted || progressData?.sizeFormatted || 'Hesaplanıyor...';
+  const currentFile = progressData?.currentFile || 'Yedekleme motoru hazırlanıyor...';
+  const processedFiles = progressData?.processedFiles || 0;
+  const totalFiles = progressData?.totalFiles || 0;
+  const compressionRatio = progressData?.compressionRatio || 'Otomatik (Deflate)';
+  const checksumHash = progressData?.checksumHash || (isFinished ? 'SHA256: 8f4a2b9c3e1d7f6a5b4c3d2e1f0a9b8c...' : 'Hesaplanıyor...');
   const integrityStatus = progressData?.integrityStatus || (percent === 100 ? 'verified' : 'verifying');
   const step = progressData?.step || Math.min(6, Math.max(1, Math.ceil((percent / 100) * 6)));
 

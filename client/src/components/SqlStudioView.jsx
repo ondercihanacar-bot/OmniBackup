@@ -656,65 +656,71 @@ export default function SqlStudioView({ onJobCreated, onRefresh }) {
             </div>
 
             {/* Table List */}
-            <div className="overflow-x-auto border border-slate-200 rounded-xl">
-              <table className="w-full text-left text-xs text-slate-600">
-                <thead className="bg-slate-50 text-[11px] font-bold text-slate-700 uppercase border-b border-slate-200">
-                  <tr>
-                    <th className="px-4 py-2.5">Tablo Adı</th>
-                    <th className="px-3 py-2.5">Satır Sayısı</th>
-                    <th className="px-3 py-2.5">Veri Boyutu</th>
-                    <th className="px-3 py-2.5">Kategori</th>
-                    <th className="px-4 py-2.5 text-right">Kurtarma & İşlemler</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {(tablesData?.tables || [
-                    { name: 'TBL_FATURALAR', rowCount: 148520, dataSize: '245.8 MB', type: 'Transactional' },
-                    { name: 'TBL_CARI_HESAPLAR', rowCount: 12400, dataSize: '34.2 MB', type: 'Master Data' },
-                    { name: 'TBL_STOK_KARTLARI', rowCount: 45890, dataSize: '88.1 MB', type: 'Master Data' },
-                    { name: 'TBL_KULLANICILAR', rowCount: 180, dataSize: '1.2 MB', type: 'Security' },
-                    { name: 'TBL_LOG_AUDIT', rowCount: 980400, dataSize: '1.45 GB', type: 'Audit Logs' }
-                  ]).map((t) => (
-                    <tr key={t.name} className="hover:bg-slate-50/80 transition">
-                      <td className="px-4 py-3 font-bold text-slate-800 font-mono">
-                        {t.name}
-                      </td>
-                      <td className="px-3 py-3 font-semibold text-slate-700">
-                        {t.rowCount?.toLocaleString()}
-                      </td>
-                      <td className="px-3 py-3 font-mono text-slate-500">
-                        {t.dataSize}
-                      </td>
-                      <td className="px-3 py-3">
-                        <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-700">
-                          {t.type}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <button
-                            onClick={() => handlePreviewTable(t.name)}
-                            className="p-1.5 rounded hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition"
-                            title="Tablo Verilerini Önizle"
-                          >
-                            <Eye className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            onClick={() => handleRestoreTable(t.name)}
-                            disabled={restoringTable === t.name}
-                            className="px-2 py-1 rounded bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 text-[11px] font-bold flex items-center gap-1 transition"
-                            title="Canlı Veritabanına Geri Yükle"
-                          >
-                            <RotateCcw className={`w-3 h-3 ${restoringTable === t.name ? 'animate-spin' : ''}`} />
-                            <span>{restoringTable === t.name ? 'Kurtarılıyor...' : 'Granüler Kurtar'}</span>
-                          </button>
-                        </div>
-                      </td>
+            {tablesData?.tables && tablesData.tables.length > 0 ? (
+              <div className="overflow-x-auto border border-slate-200 rounded-xl">
+                <table className="w-full text-left text-xs text-slate-600">
+                  <thead className="bg-slate-50 text-[11px] font-bold text-slate-700 uppercase border-b border-slate-200">
+                    <tr>
+                      <th className="px-4 py-2.5">Tablo Adı</th>
+                      <th className="px-3 py-2.5">Satır Sayısı</th>
+                      <th className="px-3 py-2.5">Veri Boyutu</th>
+                      <th className="px-3 py-2.5">Kategori</th>
+                      <th className="px-4 py-2.5 text-right">Kurtarma & İşlemler</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {tablesData.tables.map((t) => (
+                      <tr key={t.name} className="hover:bg-slate-50/80 transition">
+                        <td className="px-4 py-3 font-bold text-slate-800 font-mono">
+                          {t.name}
+                        </td>
+                        <td className="px-3 py-3 font-semibold text-slate-700">
+                          {t.rowCount?.toLocaleString()}
+                        </td>
+                        <td className="px-3 py-3 font-mono text-slate-500">
+                          {t.dataSize}
+                        </td>
+                        <td className="px-3 py-3">
+                          <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-700">
+                            {t.type}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={() => handlePreviewTable(t.name)}
+                              className="p-1.5 rounded hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition"
+                              title="Tablo Verilerini Önizle"
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => handleRestoreTable(t.name)}
+                              disabled={restoringTable === t.name}
+                              className="px-2 py-1 rounded bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 text-[11px] font-bold flex items-center gap-1 transition"
+                              title="Canlı Veritabanına Geri Yükle"
+                            >
+                              <RotateCcw className={`w-3 h-3 ${restoringTable === t.name ? 'animate-spin' : ''}`} />
+                              <span>{restoringTable === t.name ? 'Kurtarılıyor...' : 'Granüler Kurtar'}</span>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="p-8 border border-dashed border-slate-200 rounded-xl text-center space-y-2 bg-slate-50/50">
+                <Table className="w-8 h-8 text-slate-400 mx-auto" />
+                <h4 className="text-xs font-bold text-slate-700">
+                  {selectedDb ? `'${selectedDb}' Veritabanı İçin Tablo Bulunmuyor` : 'Bağlantı Kurulduğunda Tablolar Listelenecektir'}
+                </h4>
+                <p className="text-[11px] text-slate-500 max-w-sm mx-auto">
+                  Canlı veritabanındaki tabloları ve granüler kurtarma seçeneklerini listelemek için sol panelden "Sunucuya Bağlan & Tara" butonuna tıklayınız.
+                </p>
+              </div>
+            )}
           </div>
 
         </div>

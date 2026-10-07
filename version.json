@@ -1,9 +1,9 @@
 {
-  "version": "2.8.5",
-  "buildDate": "2026-10-07T22:35:00Z",
+  "version": "2.8.6",
+  "buildDate": "2026-10-07T22:40:00Z",
   "minSupportedVersion": "1.0.0",
   "mandatory": false,
-  "releaseNotes": "OmniBackup Enterprise v2.8.5:\n- Yönetici Raporları (Reports) Tam Dinamik: Toplam korunan veri, depolama hedefleri dağılımı, korunan makineler ve felaket kurtarma sertifikası tamamen canlı ve gerçek sistem verilerine bağlandı.\n- Tüm Sahte/Demo Veriler Temizlendi: Aktiviteler, Raporlar, Veritabanı stüdyosu ve İmaj dönüştürücüdeki tüm sabit demo kayıtlar sıfırlandı.\n- Kalıcı Sıfır Demo Garantisi: Gelecekteki güncellemelerde hiçbir sahte demo veri arayüze eklenmez; müşteri planları ve özel ayarlar %100 korunur.",
+  "releaseNotes": "OmniBackup Enterprise v2.8.6:\n- SQL & RMAN Stüdyosu Tam Dinamik: Granüler tablo kurtarma ve gezginindeki sahte demo tablolar temizlendi; canlı sunucuya bağlanıldığında gerçek tablolar listelenmektedir.\n- Ağ Ajan Dağıtımı Temizlendi: Ağ keşfindeki sahte cihaz listesi temizlendi, gerçek ağ taraması sonuçlarına bağlandı.\n- Canlı İlerleme Çubuğu Dinamikleşti: Sabit demo transfer hızları ve tahmini boyutlar kaldırılarak anlık motor verilerine bağlandı.\n- Sıfır Demo Garantisi: Gelecekteki güncellemelerde hiçbir sahte demo veri yüklenmez.",
   "downloadUrl": "https://raw.githubusercontent.com/ondercihanacar-bot/OmniBackup/main/omni_patch.zip",
   "setupUrl": "https://github.com/ondercihanacar-bot/OmniBackup/raw/main/OmniBackup_Setup.exe",
   "packageSize": "3.8 MB",

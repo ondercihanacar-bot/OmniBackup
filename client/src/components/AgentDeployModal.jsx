@@ -173,54 +173,60 @@ export default function AgentDeployModal({ isOpen, onClose }) {
 
             {/* Discovered Machines Table */}
             <div className="border border-slate-800 rounded-xl overflow-hidden bg-slate-900/60 max-h-60 overflow-y-auto">
-              <table className="w-full text-left text-xs text-slate-300">
-                <thead className="bg-slate-950 text-[11px] font-bold text-slate-400 uppercase border-b border-slate-800">
-                  <tr>
-                    <th className="px-3 py-2">IP Adresi</th>
-                    <th className="px-3 py-2">Makine Adı & Model</th>
-                    <th className="px-3 py-2">İşletim Sistemi</th>
-                    <th className="px-3 py-2">Ajan Durumu</th>
-                    <th className="px-3 py-2 text-right">Uzak Kurulum</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-800 font-mono text-[11px]">
-                  {(scanResults?.machines || [
-                    { ip: '127.0.0.1', hostname: 'SRV-BACKUP-MASTER', os: 'Windows Server 2022 (Bu Makine)', agentInstalled: true, agentVersion: 'v1.4.0 Live' },
-                    { ip: '192.168.1.10', hostname: 'SRV-HYPERV-01', os: 'Windows Server 2022 Datacenter', agentInstalled: true, agentVersion: 'v1.4.0' },
-                    { ip: '192.168.1.15', hostname: 'SRV-SQL-PROD', os: 'Windows Server 2019', agentInstalled: true, agentVersion: 'v1.4.0' },
-                    { ip: '192.168.1.22', hostname: 'SRV-FILE-NAS', os: 'Windows Server 2016 (SMB Share)', agentInstalled: false, agentVersion: 'Yok' },
-                    { ip: '192.168.1.45', hostname: 'MUHASEBE-PC-04', os: 'Windows 11 Pro', agentInstalled: false, agentVersion: 'Yok' }
-                  ]).map((m, idx) => (
-                    <tr key={idx} className="hover:bg-slate-800/50 transition">
-                      <td className="px-3 py-2 text-cyan-400 font-bold">{m.ip}</td>
-                      <td className="px-3 py-2 text-white flex items-center gap-1.5">
-                        <Monitor className="w-3.5 h-3.5 text-slate-400" />
-                        <span>{m.hostname}</span>
-                      </td>
-                      <td className="px-3 py-2 text-slate-400">{m.os}</td>
-                      <td className="px-3 py-2">
-                        {m.agentInstalled ? (
-                          <span className="px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800 text-[10px] font-bold">
-                            ✓ Kurulu ({m.agentVersion})
-                          </span>
-                        ) : (
-                          <span className="px-2 py-0.5 rounded bg-amber-950 text-amber-400 border border-amber-800 text-[10px] font-bold">
-                            ● Ajan Yok
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-3 py-2 text-right">
-                        <button
-                          onClick={() => handleGetDeployScript(m.ip)}
-                          className="px-2.5 py-1 rounded bg-sky-950 text-sky-300 hover:bg-sky-900 border border-sky-800 text-[11px] font-semibold transition"
-                        >
-                          Uzak Kur Scripti
-                        </button>
-                      </td>
+              {scanResults?.machines && scanResults.machines.length > 0 ? (
+                <table className="w-full text-left text-xs text-slate-300">
+                  <thead className="bg-slate-950 text-[11px] font-bold text-slate-400 uppercase border-b border-slate-800">
+                    <tr>
+                      <th className="px-3 py-2">IP Adresi</th>
+                      <th className="px-3 py-2">Makine Adı & Model</th>
+                      <th className="px-3 py-2">İşletim Sistemi</th>
+                      <th className="px-3 py-2">Ajan Durumu</th>
+                      <th className="px-3 py-2 text-right">Uzak Kurulum</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800 font-mono text-[11px]">
+                    {scanResults.machines.map((m, idx) => (
+                      <tr key={idx} className="hover:bg-slate-800/50 transition">
+                        <td className="px-3 py-2 text-cyan-400 font-bold">{m.ip}</td>
+                        <td className="px-3 py-2 text-white flex items-center gap-1.5">
+                          <Monitor className="w-3.5 h-3.5 text-slate-400" />
+                          <span>{m.hostname}</span>
+                        </td>
+                        <td className="px-3 py-2 text-slate-400">{m.os}</td>
+                        <td className="px-3 py-2">
+                          {m.agentInstalled ? (
+                            <span className="px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800 text-[10px] font-bold">
+                              ✓ Kurulu ({m.agentVersion})
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 rounded bg-amber-950 text-amber-400 border border-amber-800 text-[10px] font-bold">
+                              ● Ajan Yok
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-3 py-2 text-right">
+                          <button
+                            onClick={() => handleGetDeployScript(m.ip)}
+                            className="px-2.5 py-1 rounded bg-sky-950 text-sky-300 hover:bg-sky-900 border border-sky-800 text-[11px] font-semibold transition"
+                          >
+                            Uzak Kur Scripti
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <div className="p-8 text-center space-y-2 text-slate-400">
+                  <Monitor className="w-8 h-8 text-slate-600 mx-auto" />
+                  <p className="text-xs font-semibold text-slate-300">
+                    Ağ Taraması Yapıldığında Cihazlar Burada Listelenecektir
+                  </p>
+                  <p className="text-[11px] text-slate-500 max-w-sm mx-auto">
+                    Ağdaki istemci ve sunucuları otomatik keşfetmek için yukarıdaki "Ağı Tara & Keşfet" butonuna tıklayınız.
+                  </p>
+                </div>
+              )}
             </div>
 
             {selectedMachineScript && (
