@@ -5,11 +5,90 @@ using System.Diagnostics;
 using System.Threading;
 using System.Drawing;
 using System.Windows.Forms;
+using System.Runtime.InteropServices;
 
 namespace OmniBackupUpdater
 {
     static class Program
     {
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern IntPtr FindWindowEx(IntPtr parentHandle, IntPtr childAfter, string className, string windowTitle);
+
+        [DllImport("user32.dll")]
+        public static extern bool GetClientRect(IntPtr hWnd, out RECT lpRect);
+
+        [DllImport("user32.dll")]
+        public static extern IntPtr SendMessage(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
+
+        [DllImport("user32.dll")]
+        public static extern bool PostMessage(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct RECT
+        {
+            public int Left;
+            public int Top;
+            public int Right;
+            public int Bottom;
+        }
+
+        public const uint WM_MOUSEMOVE = 0x0200;
+        public const uint WM_CLOSE = 0x0010;
+
+        public static void RefreshNotificationArea()
+        {
+            try
+            {
+                // Refresh main tray notification toolbar
+                IntPtr hTray = FindWindow("Shell_TrayWnd", null);
+                if (hTray != IntPtr.Zero)
+                {
+                    IntPtr hTrayNotify = FindWindowEx(hTray, IntPtr.Zero, "TrayNotifyWnd", null);
+                    if (hTrayNotify != IntPtr.Zero)
+                    {
+                        IntPtr hSysPager = FindWindowEx(hTrayNotify, IntPtr.Zero, "SysPager", null);
+                        IntPtr hToolbar = (hSysPager != IntPtr.Zero)
+                            ? FindWindowEx(hSysPager, IntPtr.Zero, "ToolbarWindow32", null)
+                            : FindWindowEx(hTrayNotify, IntPtr.Zero, "ToolbarWindow32", null);
+
+                        if (hToolbar != IntPtr.Zero) SweepToolbar(hToolbar);
+                    }
+                }
+
+                // Refresh overflow tray notification toolbar (hidden icons flyout)
+                IntPtr hOverflow = FindWindow("NotifyIconOverflowWindow", null);
+                if (hOverflow != IntPtr.Zero)
+                {
+                    IntPtr hOverflowToolbar = FindWindowEx(hOverflow, IntPtr.Zero, "ToolbarWindow32", null);
+                    if (hOverflowToolbar != IntPtr.Zero) SweepToolbar(hOverflowToolbar);
+                }
+            }
+            catch { }
+        }
+
+        private static void SweepToolbar(IntPtr hToolbar)
+        {
+            try
+            {
+                RECT rect;
+                if (GetClientRect(hToolbar, out rect))
+                {
+                    for (int x = 2; x < rect.Right; x += 10)
+                    {
+                        for (int y = 2; y < rect.Bottom; y += 10)
+                        {
+                            IntPtr lParam = (IntPtr)((y << 16) | (x & 0xFFFF));
+                            PostMessage(hToolbar, WM_MOUSEMOVE, IntPtr.Zero, lParam);
+                        }
+                    }
+                }
+            }
+            catch { }
+        }
+
         [STAThread]
         static void Main(string[] args)
         {
@@ -243,11 +322,31 @@ namespace OmniBackupUpdater
                 {
                     try
                     {
-                        p.Kill();
-                        p.WaitForExit(2000);
+                        if (p.MainWindowHandle != IntPtr.Zero)
+                        {
+                            Program.PostMessage(p.MainWindowHandle, Program.WM_CLOSE, IntPtr.Zero, IntPtr.Zero);
+                        }
                     }
                     catch { }
                 }
+
+                Thread.Sleep(500);
+
+                foreach (Process p in Process.GetProcessesByName(processName))
+                {
+                    try
+                    {
+                        if (!p.HasExited)
+                        {
+                            p.Kill();
+                            p.WaitForExit(1500);
+                        }
+                    }
+                    catch { }
+                }
+
+                // Immediately sweep system tray to eliminate any ghost tray icons
+                Program.RefreshNotificationArea();
             }
             catch { }
         }
@@ -260,12 +359,41 @@ namespace OmniBackupUpdater
                 {
                     try
                     {
+                        bool shouldClose = false;
                         if (p.MainWindowHandle != IntPtr.Zero && !string.IsNullOrEmpty(p.MainWindowTitle))
                         {
                             string t = p.MainWindowTitle;
                             if (t.IndexOf("OmniBackup", StringComparison.OrdinalIgnoreCase) >= 0 ||
                                 t.IndexOf("127.0.0.1", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                t.IndexOf("localhost:3060", StringComparison.OrdinalIgnoreCase) >= 0 ||
                                 t.IndexOf("Cyber Vault", StringComparison.OrdinalIgnoreCase) >= 0)
+                            {
+                                shouldClose = true;
+                            }
+                        }
+
+                        // Also check msedge / chrome / browser processes launched for OmniBackup
+                        if (!shouldClose && (p.ProcessName.Equals("msedge", StringComparison.OrdinalIgnoreCase) || p.ProcessName.Equals("chrome", StringComparison.OrdinalIgnoreCase)))
+                        {
+                            if (!string.IsNullOrEmpty(p.MainWindowTitle) && 
+                               (p.MainWindowTitle.IndexOf("OmniBackup", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                p.MainWindowTitle.IndexOf("3060", StringComparison.OrdinalIgnoreCase) >= 0))
+                            {
+                                shouldClose = true;
+                            }
+                        }
+
+                        if (shouldClose)
+                        {
+                            try
+                            {
+                                p.CloseMainWindow();
+                                if (!p.WaitForExit(1000))
+                                {
+                                    p.Kill();
+                                }
+                            }
+                            catch
                             {
                                 p.Kill();
                             }
@@ -273,6 +401,9 @@ namespace OmniBackupUpdater
                     }
                     catch { }
                 }
+
+                // Call RefreshNotificationArea again after windows close
+                Program.RefreshNotificationArea();
             }
             catch { }
         }

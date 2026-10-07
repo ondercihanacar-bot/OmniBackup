@@ -23,19 +23,23 @@ export default function UpdateNotificationModal({ isOpen, onClose, updateInfo, o
 
   const handleStartUpdate = async () => {
     setIsUpdating(true);
-    setStatusMessage('Güncelleme paketi indiriliyor ve OmniUpdater başlatılıyor...');
+    setStatusMessage('OmniUpdater başlatılıyor, ana pencere devrediliyor...');
     setError(null);
 
     try {
       const res = await api.applyUpdate(updateInfo.downloadUrl);
       if (res.success) {
-        setStatusMessage('Güncelleme başladı. Dosyalar aktarılıyor...');
+        setStatusMessage('Güncelleyici devraldı! Ana pencere kapatılıyor...');
         if (onUpdateStarted) onUpdateStarted();
 
-        // 1. Önce eski servisin kapanması için bekle (en az 4 saniye)
-        await new Promise(r => setTimeout(r, 4000));
+        // Ana pencereyi derhal kapatarak kullanıcının yalnızca OmniUpdater penceresini görmesini sağla
+        setTimeout(() => {
+          try {
+            window.close();
+          } catch (_) {}
+        }, 1200);
 
-        // 2. Yeni servisin ayağa kalkmasını bekle (kesinlikle önden reload yapma)
+        // Pencere kapanmasa bile ekranı temiz/profesyonel bekleme durumuna al
         let attempts = 0;
         const checkServerInterval = setInterval(async () => {
           attempts++;
@@ -46,11 +50,11 @@ export default function UpdateNotificationModal({ isOpen, onClose, updateInfo, o
               setStatusMessage('Yeni sürüm (v' + (updateInfo.latestVersion || '') + ') başarıyla aktif edildi! Arayüz yükleniyor...');
               setTimeout(() => {
                 window.location.href = '/?updated=' + Date.now();
-              }, 800);
+              }, 600);
             }
           } catch (e) {
-            setStatusMessage(`Güncelleme dosyaları aktarılıyor ve servis başlatılıyor... (${attempts} sn)`);
-            if (attempts > 60) {
+            setStatusMessage(`OmniUpdater arka planda güncellemeyi tamamlıyor... (${attempts} sn)`);
+            if (attempts > 50) {
               clearInterval(checkServerInterval);
               window.location.href = '/?updated=' + Date.now();
             }

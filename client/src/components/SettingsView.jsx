@@ -84,8 +84,11 @@ export default function SettingsView({ settings, onSaveSettings }) {
     try {
       const res = await api.applyUpdate(updateData.downloadUrl);
       if (res.success) {
-        setUpdateMsg("✓ Güncelleme başlatıldı. Dosyalar aktarılıyor...");
-        await new Promise(r => setTimeout(r, 4000));
+        setUpdateMsg("✓ OmniUpdater devraldı! Ana pencere kapatılıyor...");
+        setTimeout(() => {
+          try { window.close(); } catch (_) {}
+        }, 1200);
+
         let attempts = 0;
         const checkServerInterval = setInterval(async () => {
           attempts++;
@@ -96,11 +99,11 @@ export default function SettingsView({ settings, onSaveSettings }) {
               setUpdateMsg("✓ Güncelleme başarıyla tamamlandı! Arayüz yenileniyor...");
               setTimeout(() => {
                 window.location.href = '/?updated=' + Date.now();
-              }, 800);
+              }, 600);
             }
           } catch (e) {
-            setUpdateMsg(`Güncelleme uygulanıyor ve servis başlatılıyor... (${attempts} sn)`);
-            if (attempts > 60) {
+            setUpdateMsg(`OmniUpdater arka planda güncellemeyi tamamlıyor... (${attempts} sn)`);
+            if (attempts > 50) {
               clearInterval(checkServerInterval);
               window.location.href = '/?updated=' + Date.now();
             }
