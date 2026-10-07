@@ -128,9 +128,9 @@ export default function VmConverterView() {
                 onChange={(e) => setSelectedSource(e.target.value)}
                 className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-slate-50 font-semibold"
               >
-                <option value="SRV-MSSQL-PROD">🖥️ SRV-MSSQL-PROD (Windows Server 2022 Disk)</option>
-                <option value="SRV-APP-LINUX">🐧 SRV-APP-LINUX (Ubuntu 22.04 LTS Disk)</option>
-                <option value="DESKTOP-FINANS">💻 DESKTOP-FINANS (Windows 11 Pro C:\)</option>
+                <option value="Local-System-Image">🖥️ Yerel Sistem İmajı (Windows OS C:\)</option>
+                <option value="Local-SQL-Database">🗄️ SQL Veritabanı Arşivi (.bak)</option>
+                <option value="Local-Data-Disk">💾 Veri Diski İmajı (.img)</option>
               </select>
             </div>
 
