@@ -29,15 +29,8 @@ export default function UpdateNotificationModal({ isOpen, onClose, updateInfo, o
     try {
       const res = await api.applyUpdate(updateInfo.downloadUrl);
       if (res.success) {
-        setStatusMessage('Güncelleyici devraldı! Ana pencere kapatılıyor...');
+        setStatusMessage('Güncelleyici devraldı! Paket indiriliyor ve sistem yenileniyor...');
         if (onUpdateStarted) onUpdateStarted();
-
-        // Ana pencereyi derhal kapatarak kullanıcının yalnızca OmniUpdater penceresini görmesini sağla
-        setTimeout(() => {
-          try {
-            window.close();
-          } catch (_) {}
-        }, 1200);
 
         // Pencere kapanmasa bile ekranı temiz/profesyonel bekleme durumuna al
         let attempts = 0;

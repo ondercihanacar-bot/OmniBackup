@@ -1603,49 +1603,104 @@ app.post('/api/test-connection/cloud', async (req, res) => {
 // --------------------------------------------------------------------------
 // 7.27 OTA NETWORK AUTO-UPDATER API
 // --------------------------------------------------------------------------
-let CURRENT_APP_VERSION = "2.7.0"; // Current installed version on this client instance
-try {
-  const localVerPath = path.join(__dirname, '../version.json');
-  if (fs.existsSync(localVerPath)) {
-    const vData = JSON.parse(fs.readFileSync(localVerPath, 'utf8'));
-    if (vData && vData.version) {
-      CURRENT_APP_VERSION = vData.version;
+const getInstalledVersion = () => {
+  try {
+    const localVerPath = path.join(__dirname, '../version.json');
+    if (fs.existsSync(localVerPath)) {
+      const vData = JSON.parse(fs.readFileSync(localVerPath, 'utf8'));
+      if (vData && vData.version) {
+        return vData.version;
+      }
     }
-  }
-} catch (e) {
-  CURRENT_APP_VERSION = "2.7.0";
-}
+  } catch (e) { }
+  return "2.8.2";
+};
+
+// Helper to fetch JSON from remote URL with redirect support
+const fetchRemote = (targetUrl, maxRedirects = 5) => {
+  return new Promise((resolve, reject) => {
+    if (maxRedirects <= 0) return reject(new Error('Çok fazla yönlendirme (Too many redirects)'));
+    const client = targetUrl.startsWith('https') ? require('https') : require('http');
+    const request = client.get(targetUrl, { timeout: 8000 }, (resp) => {
+      if (resp.statusCode >= 300 && resp.statusCode < 400 && resp.headers.location) {
+        let redirectUrl = resp.headers.location;
+        if (!redirectUrl.startsWith('http')) {
+          const parsed = new URL(targetUrl);
+          redirectUrl = new URL(redirectUrl, parsed.origin).toString();
+        }
+        resp.resume();
+        return fetchRemote(redirectUrl, maxRedirects - 1).then(resolve).catch(reject);
+      }
+      if (resp.statusCode !== 200) {
+        resp.resume();
+        return reject(new Error(`HTTP ${resp.statusCode}`));
+      }
+      let data = '';
+      resp.on('data', chunk => data += chunk);
+      resp.on('end', () => {
+        try {
+          resolve(JSON.parse(data));
+        } catch (e) {
+          reject(e);
+        }
+      });
+    });
+    request.on('error', reject);
+    request.on('timeout', () => {
+      request.destroy();
+      reject(new Error('Timeout'));
+    });
+  });
+};
+
+// Helper to download binary files with redirect support
+const downloadWithRedirects = (targetUrl, destPath, maxRedirects = 5) => {
+  return new Promise((resolve, reject) => {
+    if (maxRedirects <= 0) return reject(new Error('Çok fazla yönlendirme (Too many redirects)'));
+    const client = targetUrl.startsWith('https') ? require('https') : require('http');
+    const request = client.get(targetUrl, { timeout: 30000 }, (resp) => {
+      if (resp.statusCode >= 300 && resp.statusCode < 400 && resp.headers.location) {
+        let redirectUrl = resp.headers.location;
+        if (!redirectUrl.startsWith('http')) {
+          const parsed = new URL(targetUrl);
+          redirectUrl = new URL(redirectUrl, parsed.origin).toString();
+        }
+        resp.resume();
+        return downloadWithRedirects(redirectUrl, destPath, maxRedirects - 1).then(resolve).catch(reject);
+      }
+
+      if (resp.statusCode !== 200) {
+        resp.resume();
+        return reject(new Error(`İndirme başarısız oldu: HTTP ${resp.statusCode}`));
+      }
+
+      const fileStream = fs.createWriteStream(destPath);
+      resp.pipe(fileStream);
+      fileStream.on('finish', () => {
+        fileStream.close(() => resolve(destPath));
+      });
+      fileStream.on('error', (err) => {
+        fs.unlink(destPath, () => {});
+        reject(err);
+      });
+    });
+    request.on('error', (err) => {
+      fs.unlink(destPath, () => {});
+      reject(err);
+    });
+    request.on('timeout', () => {
+      request.destroy();
+      fs.unlink(destPath, () => {});
+      reject(new Error('İndirme zaman aşımına uğradı (Timeout)'));
+    });
+  });
+};
 
 // 1. Check for available updates (Supports remote GitHub / custom URL or local)
 app.get('/api/update/check', async (req, res) => {
   const customUrl = req.query.url;
   const versionFile = path.join(__dirname, '../version.json');
-  
-  // Helper to fetch JSON from remote URL
-  const fetchRemote = (targetUrl) => {
-    return new Promise((resolve, reject) => {
-      const client = targetUrl.startsWith('https') ? require('https') : require('http');
-      const request = client.get(targetUrl, { timeout: 4000 }, (resp) => {
-        if (resp.statusCode !== 200) {
-          return reject(new Error(`HTTP ${resp.statusCode}`));
-        }
-        let data = '';
-        resp.on('data', chunk => data += chunk);
-        resp.on('end', () => {
-          try {
-            resolve(JSON.parse(data));
-          } catch (e) {
-            reject(e);
-          }
-        });
-      });
-      request.on('error', reject);
-      request.on('timeout', () => {
-        request.destroy();
-        reject(new Error('Timeout'));
-      });
-    });
-  };
+  const currentVersion = getInstalledVersion();
 
   let remoteMeta = null;
 
@@ -1678,17 +1733,17 @@ app.get('/api/update/check', async (req, res) => {
   if (!remoteMeta) {
     return res.json({
       hasUpdate: false,
-      currentVersion: CURRENT_APP_VERSION,
+      currentVersion: currentVersion,
       message: "Sistem güncel veya güncelleme sunucusuna erişilemedi."
     });
   }
 
   try {
-    const isNewer = compareVersions(remoteMeta.version, CURRENT_APP_VERSION) > 0;
+    const isNewer = compareVersions(remoteMeta.version, currentVersion) > 0;
 
     res.json({
       hasUpdate: isNewer,
-      currentVersion: CURRENT_APP_VERSION,
+      currentVersion: currentVersion,
       latestVersion: remoteMeta.version,
       buildDate: remoteMeta.buildDate,
       mandatory: remoteMeta.mandatory || false,
@@ -1743,22 +1798,12 @@ app.post('/api/update/apply', async (req, res) => {
     if (fs.existsSync(localPatchSource)) {
       fs.copyFileSync(localPatchSource, patchTempZip);
     } else {
-      // If client is downloading over network from master server
+      // If client is downloading over network from master server or GitHub
       const downloadTarget = downloadUrl && downloadUrl.startsWith('http') 
         ? downloadUrl 
-        : `http://127.0.0.1:${PORT}/api/update/download`;
+        : `https://raw.githubusercontent.com/ondercihanacar-bot/OmniBackup/main/omni_patch.zip`;
       
-      const fileStream = fs.createWriteStream(patchTempZip);
-      await new Promise((resolve, reject) => {
-        const client = downloadTarget.startsWith('https') ? require('https') : require('http');
-        client.get(downloadTarget, (resp) => {
-          if (resp.statusCode !== 200) {
-            return reject(new Error(`İndirme başarısız oldu: HTTP ${resp.statusCode}`));
-          }
-          resp.pipe(fileStream);
-          fileStream.on('finish', () => fileStream.close(resolve));
-        }).on('error', reject);
-      });
+      await downloadWithRedirects(downloadTarget, patchTempZip);
     }
 
     if (!fs.existsSync(updaterExe)) {
