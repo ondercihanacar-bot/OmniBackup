@@ -23,8 +23,8 @@ if (Test-Path $PatchZip) { Remove-Item -Force $PatchZip }
 
 Set-Location $ProjectRoot
 
-# Pack core updated files: server (excluding node_modules, db.json and storage), client/dist, scripts, version.json
-& tar.exe -acf omni_patch.zip --exclude=server/node_modules --exclude=server/db.json --exclude=server/storage --exclude=server/data --exclude=client/src --exclude=client/node_modules --exclude=omni_payload.zip --exclude=omni_patch.zip --exclude=.git server client/dist scripts/OmniUpdater.exe version.json
+# Pack core updated files: server (excluding node_modules, db.json and storage), client/dist, scripts, version.json, OmniBackup.exe
+& tar.exe -acf omni_patch.zip --exclude=server/node_modules --exclude=server/db.json --exclude=server/storage --exclude=server/data --exclude=client/src --exclude=client/node_modules --exclude=omni_payload.zip --exclude=omni_patch.zip --exclude=.git server client/dist scripts/OmniUpdater.exe OmniBackup.exe version.json
 
 if (Test-Path $PatchZip) {
     $Item = Get-Item $PatchZip

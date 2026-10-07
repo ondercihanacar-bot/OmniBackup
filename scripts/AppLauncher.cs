@@ -657,15 +657,14 @@ namespace OmniBackupLauncher
                 webView.CoreWebView2.Settings.IsStatusBarEnabled = false;
                 webView.CoreWebView2.Settings.AreDevToolsEnabled = false;
                 webView.CoreWebView2.Settings.IsBuiltInErrorPageEnabled = true;
-                webView.CoreWebView2.Settings.AreDefaultContextMenusEnabled = false; // Native app feel: no browser context menu
+                webView.CoreWebView2.Settings.AreDefaultContextMenusEnabled = false;
 
                 // Listen for navigation completed
                 webView.NavigationCompleted += (s, e) => {
                     if (!e.IsSuccess)
                     {
-                        // Auto retry if backend server was still starting up
                         System.Windows.Forms.Timer retryTimer = new System.Windows.Forms.Timer();
-                        retryTimer.Interval = 2000;
+                        retryTimer.Interval = 1500;
                         retryTimer.Tick += (ts, te) => {
                             retryTimer.Stop();
                             retryTimer.Dispose();
@@ -684,6 +683,11 @@ namespace OmniBackupLauncher
                     }
                     lblLoading.Visible = false;
                     webView.Visible = true;
+                    this.Opacity = 1;
+                    this.ShowInTaskbar = true;
+                    this.WindowState = FormWindowState.Normal;
+                    this.BringToFront();
+                    this.Activate();
                 };
 
                 // Navigate directly to the local server
@@ -691,7 +695,6 @@ namespace OmniBackupLauncher
             }
             catch (Exception)
             {
-                // If WebView2 runtime is missing or fails on client machine, safely launch native standalone browser window
                 SafeFallbackLaunch();
             }
         }
