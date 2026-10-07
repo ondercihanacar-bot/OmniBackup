@@ -657,6 +657,17 @@ namespace OmniBackupLauncher
                 this.Visible = false;
                 this.Hide();
 
+                // Ensure server is verified running before opening browser window
+                Program.EnsureServerStarted();
+                for (int i = 0; i < 20; i++)
+                {
+                    if (Program.IsServerRunning("http://127.0.0.1:3060/api/stats"))
+                    {
+                        break;
+                    }
+                    Thread.Sleep(500);
+                }
+
                 string browserExe = FindChromiumBrowser();
                 string appUrl = "http://127.0.0.1:3060";
                 string profileDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "OmniBackup", "DesktopProfile");

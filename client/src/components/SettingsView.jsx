@@ -84,7 +84,28 @@ export default function SettingsView({ settings, onSaveSettings }) {
     try {
       const res = await api.applyUpdate(updateData.downloadUrl);
       if (res.success) {
-        setUpdateMsg("✓ Güncelleme başlatıldı! OmniBackup yeniden başlatılıyor...");
+        setUpdateMsg("✓ Güncelleme başlatıldı. Dosyalar aktarılıyor...");
+        await new Promise(r => setTimeout(r, 4000));
+        let attempts = 0;
+        const checkServerInterval = setInterval(async () => {
+          attempts++;
+          try {
+            const probe = await fetch('/api/stats?t=' + Date.now(), { cache: 'no-store' });
+            if (probe.ok) {
+              clearInterval(checkServerInterval);
+              setUpdateMsg("✓ Güncelleme başarıyla tamamlandı! Arayüz yenileniyor...");
+              setTimeout(() => {
+                window.location.href = '/?updated=' + Date.now();
+              }, 800);
+            }
+          } catch (e) {
+            setUpdateMsg(`Güncelleme uygulanıyor ve servis başlatılıyor... (${attempts} sn)`);
+            if (attempts > 60) {
+              clearInterval(checkServerInterval);
+              window.location.href = '/?updated=' + Date.now();
+            }
+          }
+        }, 1500);
       } else {
         setUpdateMsg("Güncelleme hatası: " + res.error);
         setUpdateApplying(false);

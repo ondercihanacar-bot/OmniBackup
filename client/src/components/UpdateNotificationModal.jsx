@@ -29,30 +29,33 @@ export default function UpdateNotificationModal({ isOpen, onClose, updateInfo, o
     try {
       const res = await api.applyUpdate(updateInfo.downloadUrl);
       if (res.success) {
-        setStatusMessage('Güncelleme başladı. Dosyalar yenileniyor, sistem yeniden başlatılıyor...');
+        setStatusMessage('Güncelleme başladı. Dosyalar aktarılıyor...');
         if (onUpdateStarted) onUpdateStarted();
 
-        // Akıllı bekleme: Sunucu kapandıktan sonra yeni sürümün ayağa kalkmasını bekle
+        // 1. Önce eski servisin kapanması için bekle (en az 4 saniye)
+        await new Promise(r => setTimeout(r, 4000));
+
+        // 2. Yeni servisin ayağa kalkmasını bekle (kesinlikle önden reload yapma)
         let attempts = 0;
         const checkServerInterval = setInterval(async () => {
           attempts++;
           try {
-            const probe = await fetch('/api/stats', { cache: 'no-store' });
+            const probe = await fetch('/api/stats?t=' + Date.now(), { cache: 'no-store' });
             if (probe.ok) {
               clearInterval(checkServerInterval);
-              setStatusMessage('Yeni sürüm hazır! Arayüz yükleniyor...');
+              setStatusMessage('Yeni sürüm (v' + (updateInfo.latestVersion || '') + ') başarıyla aktif edildi! Arayüz yükleniyor...');
               setTimeout(() => {
-                window.location.reload();
+                window.location.href = '/?updated=' + Date.now();
               }, 800);
             }
           } catch (e) {
-            setStatusMessage(`Güncelleme uygulanıyor ve servis yeniden başlatılıyor... (${attempts} sn)`);
-            if (attempts > 45) {
+            setStatusMessage(`Güncelleme dosyaları aktarılıyor ve servis başlatılıyor... (${attempts} sn)`);
+            if (attempts > 60) {
               clearInterval(checkServerInterval);
-              window.location.reload();
+              window.location.href = '/?updated=' + Date.now();
             }
           }
-        }, 1000);
+        }, 1500);
       } else {
         setError(res.error || 'Güncelleme başlatılamadı.');
         setIsUpdating(false);
