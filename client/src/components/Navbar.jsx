@@ -76,7 +76,7 @@ export default function Navbar({ onRefresh, isRefreshing, stats, activeTab, setA
     if (onRefresh) {
       await onRefresh();
       setShowRefreshToast(true);
-      setTimeout(() => setShowRefreshToast(false), 2500);
+      setTimeout(() => setShowRefreshToast(false), 3500);
     }
   };
 
@@ -85,9 +85,18 @@ export default function Navbar({ onRefresh, isRefreshing, stats, activeTab, setA
       
       {/* Toast Notification on Refresh */}
       {showRefreshToast && (
-        <div className="absolute top-16 right-6 bg-slate-900 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow-2xl flex items-center gap-2 border border-slate-700 animate-in fade-in slide-in-from-top-2 z-50">
-          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-          <span>✓ Tüm veriler ve telemetri başarıyla yenilendi!</span>
+        <div className="absolute top-16 right-6 bg-slate-900 text-white px-4 py-2.5 rounded-xl text-xs font-semibold shadow-2xl flex items-center gap-2.5 border border-slate-700 animate-in fade-in slide-in-from-top-2 z-50">
+          {updateInfo?.hasUpdate ? (
+            <>
+              <ArrowUpCircle className="w-4 h-4 text-amber-400 animate-bounce" />
+              <span>🚀 Yeni Sürüm v{updateInfo.latestVersion} Hazır! Araç çubuğundan hemen güncelleyebilirsiniz.</span>
+            </>
+          ) : (
+            <>
+              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+              <span>✓ Tüm veriler ve telemetri yenilendi! En güncel sürümdesiniz.</span>
+            </>
+          )}
         </div>
       )}
 
@@ -156,11 +165,17 @@ export default function Navbar({ onRefresh, isRefreshing, stats, activeTab, setA
         {updateInfo?.hasUpdate && (
           <button
             onClick={onOpenUpdate}
-            className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white flex items-center gap-1.5 font-bold px-3 py-1.5 rounded-lg transition active:scale-95 shadow-md cursor-pointer animate-pulse"
-            title={`Yeni OmniBackup v${updateInfo.latestVersion} güncellemesi hazır! Tıklayın ve yükleyin.`}
+            className="bg-gradient-to-r from-amber-500 via-rose-500 to-indigo-600 hover:from-amber-600 hover:to-indigo-700 text-white flex items-center gap-2 font-bold px-3 py-1.5 rounded-lg transition active:scale-95 shadow-md cursor-pointer animate-pulse border border-white/40 ring-2 ring-rose-400/40"
+            title={`Yeni OmniBackup v${updateInfo.latestVersion} güncellemesi hazır! Tıklayarak yükleyin veya kurulum dosyasını indirin.`}
           >
-            <ArrowUpCircle className="w-3.5 h-3.5 text-cyan-200" />
-            <span className="text-xs">Güncelleme: v{updateInfo.latestVersion}</span>
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-200 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-white"></span>
+            </span>
+            <div className="flex flex-col text-left leading-none">
+              <span className="text-[9px] uppercase tracking-wider text-amber-100 font-extrabold">YENİ SÜRÜM</span>
+              <span className="text-xs font-black text-white">v{updateInfo.latestVersion} Güncelle</span>
+            </div>
           </button>
         )}
 

@@ -63,13 +63,24 @@ export default function LogsView({ logs, onClearLogs }) {
           </span>
         </div>
 
-        <button
-          onClick={onClearLogs}
-          className="btn-acronis-outline text-rose-600 hover:bg-rose-50 border-rose-200 px-3.5 py-1.5 text-xs flex items-center gap-1.5"
-        >
-          <Trash2 className="w-3.5 h-3.5" />
-          <span>Logları Temizle</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => onClearLogs && onClearLogs('errors')}
+            className="btn-acronis-outline text-amber-700 bg-amber-50 hover:bg-amber-100 border-amber-300 px-3.5 py-1.5 text-xs flex items-center gap-1.5 font-medium transition"
+            title="Sistemdeki tüm hata ve uyarı kayıtlarını temizler"
+          >
+            <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
+            <span>Hatalı Logları Temizle</span>
+          </button>
+
+          <button
+            onClick={() => onClearLogs && onClearLogs()}
+            className="btn-acronis-outline text-rose-600 hover:bg-rose-50 border-rose-200 px-3.5 py-1.5 text-xs flex items-center gap-1.5 font-medium transition"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            <span>Tüm Logları Temizle</span>
+          </button>
+        </div>
       </div>
 
       {/* Filter & Search Bar */}

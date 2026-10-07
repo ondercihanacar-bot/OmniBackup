@@ -273,8 +273,9 @@ export const api = {
     const res = await fetch(`${BASE_URL}/logs`);
     return res.json();
   },
-  clearLogs: async () => {
-    const res = await fetch(`${BASE_URL}/logs`, { method: 'DELETE' });
+  clearLogs: async (type) => {
+    const url = type ? `${BASE_URL}/logs?type=${type}` : `${BASE_URL}/logs`;
+    const res = await fetch(url, { method: 'DELETE' });
     return res.json();
   },
   getSettings: async () => {

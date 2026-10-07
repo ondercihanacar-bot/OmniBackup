@@ -567,10 +567,15 @@ app.get('/api/logs', (req, res) => {
 });
 
 app.delete('/api/logs', (req, res) => {
+  const { type } = req.query;
   const data = db.read();
-  data.logs = [];
+  if (type === 'errors') {
+    data.logs = (data.logs || []).filter(l => l.level !== 'error' && l.level !== 'warning');
+  } else {
+    data.logs = [];
+  }
   db.write(data);
-  res.json({ success: true });
+  res.json({ success: true, count: data.logs.length });
 });
 
 app.get('/api/settings', (req, res) => {

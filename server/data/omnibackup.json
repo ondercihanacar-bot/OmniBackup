@@ -314,13 +314,6 @@
       "message": "'MSSQL - ERP & Muhasebe Veritabanı Yedeği' başarıyla tamamlandı (721 Bytes, 3 sn)."
     },
     {
-      "id": "log-1791230672214-711",
-      "timestamp": "2026-10-05T20:04:32.214Z",
-      "level": "warning",
-      "source": "Storage",
-      "message": "Hedef dizine erişilemedi (D:\\OmniBackups), yedek 'C:\\Users\\Onder\\OmniBackups' konumuna yönlendirildi."
-    },
-    {
       "id": "log-1791230672197-504",
       "timestamp": "2026-10-05T20:04:32.197Z",
       "level": "info",
@@ -333,13 +326,6 @@
       "level": "success",
       "source": "Auth",
       "message": "Yetkilendirme doğrulaması başarılı (admin) [2FA]."
-    },
-    {
-      "id": "log-1791132937234-658",
-      "timestamp": "2026-10-04T16:55:37.234Z",
-      "level": "warning",
-      "source": "Jobs",
-      "message": "Görev silindi: 'Muhasebe Test Plani'"
     },
     {
       "id": "log-1791132928801-167",

@@ -16,7 +16,9 @@ export default function Sidebar({
   stats, 
   license, 
   onOpenLicenseModal,
-  onOpenHelp 
+  onOpenHelp,
+  updateInfo,
+  onOpenUpdate
 }) {
   const { t } = useTranslation();
 
@@ -255,12 +257,32 @@ export default function Sidebar({
           </div>
         </div>
 
+        {/* Dynamic Update Notification in Sidebar */}
+        {updateInfo?.hasUpdate && (
+          <div 
+            onClick={onOpenUpdate}
+            className="mx-3 my-2 p-2.5 rounded-xl bg-gradient-to-r from-amber-500/20 via-rose-500/20 to-indigo-600/30 border border-amber-400/50 text-amber-200 cursor-pointer hover:border-amber-300 transition flex items-center justify-between group shadow-lg animate-pulse"
+            title="Yeni sürüm hazır! Tıklayarak güncelleyin."
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-base animate-bounce">🚀</span>
+              <div className="flex flex-col leading-tight">
+                <span className="text-[10px] font-black text-white uppercase tracking-wider">YENİ SÜRÜM</span>
+                <span className="text-[9px] text-amber-300 font-mono font-bold">v{updateInfo.latestVersion} Hazır</span>
+              </div>
+            </div>
+            <span className="text-[10px] font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 px-2 py-0.5 rounded shadow-xs group-hover:scale-105 transition">
+              Güncelle
+            </span>
+          </div>
+        )}
+
         {/* Bottom Engine Watermark */}
         <div className="p-3 border-t border-white/10 text-[10px] text-slate-400 font-mono flex items-center justify-between bg-[#050b14]">
-          <span>OmniEngine v2.5</span>
-          <span className="text-emerald-400 flex items-center gap-1">
+          <span className="text-cyan-300 font-bold">OmniEngine v2.8.1</span>
+          <span className="text-emerald-400 flex items-center gap-1 font-semibold">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-            Live
+            Live (v2.8.1)
           </span>
         </div>
       </div>

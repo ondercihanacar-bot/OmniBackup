@@ -102,20 +102,22 @@ export default function App() {
   const [updateInfo, setUpdateInfo] = useState(null);
   const [updateModalOpen, setUpdateModalOpen] = useState(false);
 
-  const checkForUpdates = useCallback(async () => {
+  const checkForUpdates = useCallback(async (isManual = false) => {
     try {
       const data = await api.checkUpdate();
       if (data && data.hasUpdate) {
         setUpdateInfo(data);
-        // If not already dismissed or user hasn't seen it in session
-        if (!sessionStorage.getItem('omnibackup_update_dismissed') || data.mandatory) {
+        // If manual click on refresh or mandatory, open modal directly; otherwise notify via navbar badge
+        if (isManual || !sessionStorage.getItem('omnibackup_update_dismissed') || data.mandatory) {
           setUpdateModalOpen(true);
         }
       } else {
         setUpdateInfo(null);
       }
+      return data;
     } catch (e) {
       console.warn('Update check failed:', e.message);
+      return null;
     }
   }, []);
 
@@ -131,7 +133,7 @@ export default function App() {
   const [progressData, setProgressData] = useState(null);
 
   // Fetch all system data
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (isManual = false) => {
     if (!isAuthenticated) return;
     setIsRefreshing(true);
     try {
@@ -154,19 +156,26 @@ export default function App() {
       setLogs(logsData);
       setSettings(settingsData);
       setLicense(licData);
+
+      // Yenile butonuna basıldığında veya veri çekildiğinde hemen sürüm denetimi yap
+      await checkForUpdates(isManual);
     } catch (e) {
       console.error('Error fetching data:', e);
     } finally {
       setIsRefreshing(false);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, checkForUpdates]);
 
   useEffect(() => {
-    fetchData();
-    checkForUpdates();
-    const interval = setInterval(fetchData, 10000);
-    return () => clearInterval(interval);
-  }, [fetchData]);
+    fetchData(false);
+    // 10 saniyede bir telemetri, 60 saniyede bir otomatik GitHub sürüm kontrolü
+    const intervalData = setInterval(() => fetchData(false), 10000);
+    const intervalUpdate = setInterval(() => checkForUpdates(false), 60000);
+    return () => {
+      clearInterval(intervalData);
+      clearInterval(intervalUpdate);
+    };
+  }, [fetchData, checkForUpdates]);
 
   // WebSocket live listeners
   useEffect(() => {
@@ -365,10 +374,13 @@ export default function App() {
   };
 
   // Handlers for Logs & Settings
-  const handleClearLogs = async () => {
-    if (!window.confirm("Tüm günlükleri temizlemek istiyor musunuz?")) return;
+  const handleClearLogs = async (type) => {
+    const confirmMsg = type === 'errors'
+      ? "Sistemdeki tüm hata ve uyarı günlük kayıtlarını temizlemek istiyor musunuz?"
+      : "Tüm sistem günlüklerini temizlemek istiyor musunuz?";
+    if (!window.confirm(confirmMsg)) return;
     try {
-      await api.clearLogs();
+      await api.clearLogs(type);
       fetchData();
     } catch (e) {
       alert("Hata: " + e.message);
@@ -392,7 +404,7 @@ export default function App() {
     <div className="flex flex-col h-screen overflow-hidden bg-[#f0f4f8] text-slate-800 font-sans selection:bg-[#0070e0]/20 selection:text-[#0070e0]">
       {/* Top Navbar */}
       <Navbar 
-        onRefresh={fetchData} 
+        onRefresh={() => fetchData(true)} 
         isRefreshing={isRefreshing} 
         stats={stats} 
         activeTab={activeTab} 
@@ -416,6 +428,8 @@ export default function App() {
           license={license}
           onOpenLicenseModal={() => setLicenseModalOpen(true)}
           onOpenHelp={handleOpenHelp}
+          updateInfo={updateInfo}
+          onOpenUpdate={() => setUpdateModalOpen(true)}
         />
 
         {/* Content View */}
