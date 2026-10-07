@@ -55,8 +55,32 @@ app.get(['/api/dashboard/stats', '/api/stats'], (req, res) => {
   const totalBackups = history.length;
   const successRate = totalBackups > 0 ? Math.round((successfulBackups / totalBackups) * 100) : 100;
 
-  // Calculate total protected storage estimate
-  const totalProtectedSize = "7.11 GB";
+  // Calculate total protected storage from history
+  let totalBytes = 0;
+  for (const h of history) {
+    if (h.bytes && typeof h.bytes === 'number') {
+      totalBytes += h.bytes;
+    } else if (h.sizeFormatted) {
+      const match = h.sizeFormatted.match(/([\d.]+)\s*(GB|MB|KB|B)/i);
+      if (match) {
+        const val = parseFloat(match[1]);
+        const unit = match[2].toUpperCase();
+        if (unit === 'GB') totalBytes += val * 1024 * 1024 * 1024;
+        else if (unit === 'MB') totalBytes += val * 1024 * 1024;
+        else if (unit === 'KB') totalBytes += val * 1024;
+        else totalBytes += val;
+      }
+    }
+  }
+
+  const formatStorage = (b) => {
+    if (b <= 0) return "0 B";
+    if (b >= 1024 * 1024 * 1024) return `${(b / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+    if (b >= 1024 * 1024) return `${(b / (1024 * 1024)).toFixed(1)} MB`;
+    if (b >= 1024) return `${(b / 1024).toFixed(0)} KB`;
+    return `${b} B`;
+  };
+  const totalProtectedSize = formatStorage(totalBytes);
 
   const currentlyRunning = backupEngine.activeJobs ? backupEngine.activeJobs.size : 0;
 
