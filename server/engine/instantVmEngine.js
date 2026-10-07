@@ -4,33 +4,7 @@ const db = require('../db');
 
 class InstantVmEngine {
   constructor() {
-    this.activeVMs = new Map(); // id -> vmData
-    this.initDefaultVMs();
-  }
-
-  initDefaultVMs() {
-    // Add default template states
-    this.activeVMs.set('vm-sandbox-01', {
-      id: 'vm-sandbox-01',
-      name: 'OmniVM-MSSQL-Sandbox',
-      sourceBackup: 'SQL_PROD_Full_20261003_1900.bak',
-      originalServer: 'SRV-MSSQL-PROD',
-      hypervisor: 'Microsoft Hyper-V (Isolated Virtual Switch)',
-      ipAddress: '192.168.100.15 (Sandbox NAT)',
-      ramAllocated: '8192 MB',
-      cpuCores: 4,
-      status: 'RUNNING',
-      bootTimeSeconds: 42,
-      rtoAchieved: '00:01:14',
-      startedAt: new Date(Date.now() - 35 * 60 * 1000).toISOString(),
-      integrityStatus: 'VERIFIED_100%',
-      logs: [
-        'Yedek arşivi doğrudan VHDX sanal diski olarak bağlandı (Zero-Restore Mount)',
-        'Hyper-V Sanal Ağ Adaptörü İzole Sandbox modunda başlatıldı',
-        'Windows Server 2022 işletim sistemi başarıyla boot edildi (42 saniye)',
-        'MSSQL Server Engine otomatik başlatıldı ve DB integrity CHECKDB tamamlandı: 0 hata'
-      ]
-    });
+    this.activeVMs = new Map(); // id -> vmData (starts empty)
   }
 
   getRunningVMs() {
@@ -40,10 +14,10 @@ class InstantVmEngine {
   async launchInstantVM({ backupId, vmName, ramMB = 4096, cpuCores = 2, isolatedNetwork = true }) {
     const data = db.read();
     const backup = (data.history || []).find(h => h.id === backupId) || {
-      id: backupId || 'manual-bak-01',
-      jobName: 'MSSQL_Sistem_Yedegi',
+      id: backupId || `bak-${Date.now()}`,
+      jobName: 'Sistem_Yedegi',
       fileName: 'Backup_Instant_Image.vhdx',
-      size: '18.4 GB'
+      size: '0 GB'
     };
 
     const id = `vm-${Date.now().toString(36)}`;
@@ -62,7 +36,7 @@ class InstantVmEngine {
       startedAt: new Date().toISOString(),
       integrityStatus: 'BOOTING',
       logs: [
-        `[${new Date().toLocaleTimeString()}] Yedek arşivi inceleniyor: ${backup.fileName}`,
+        `[${new Date().toLocaleTimeString()}] Yedek arşivi inceleniyor: ${backup.fileName || backup.jobName}`,
         `[${new Date().toLocaleTimeString()}] VHDX sanal disk montajı gerçekleştirildi.`,
         `[${new Date().toLocaleTimeString()}] Hyper-V VM oluşturuldu (${ramMB}MB RAM, ${cpuCores} vCPU).`,
         `[${new Date().toLocaleTimeString()}] Sanal makine başlatılıyor...`
@@ -71,7 +45,6 @@ class InstantVmEngine {
 
     this.activeVMs.set(id, newVm);
 
-    // Simulate instant boot sequence in 3 seconds
     setTimeout(() => {
       const vm = this.activeVMs.get(id);
       if (vm) {
@@ -79,9 +52,9 @@ class InstantVmEngine {
         vm.bootTimeSeconds = 38;
         vm.rtoAchieved = '00:00:38';
         vm.integrityStatus = 'VERIFIED_100%';
-        vm.logs.push(`[${new Date().toLocaleTimeString()}] İşletim sistemi ve servisler başarıyla ayağa kalktı. RTO: 38 sn.`);
+        vm.logs.push(`[${new Date().toLocaleTimeString()}] İşletim sistemi ve servisler başarıyla ayağa kalktı.`);
       }
-    }, 2500);
+    }, 2000);
 
     return newVm;
   }

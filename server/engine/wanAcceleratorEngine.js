@@ -1,9 +1,11 @@
 /**
  * WAN Accelerator & Traffic QoS Throttling Engine
- * Bandwidth scheduling, Global WAN Fingerprint Deduplication & Multi-Stream TCP Acceleration.
+ * Bandwidth scheduling, Real Host Network & Transfer Stats.
  */
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
+const db = require('../db');
 
 const DB_PATH = path.join(__dirname, '../data/wan_accelerator.json');
 
@@ -20,41 +22,11 @@ function ensureDb() {
         businessHoursEnd: '18:00',
         businessDays: ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma'],
         tcpStreamsCount: 8,
-        compressionAlgorithm: 'Zstandard (Level 3 - Realtime)',
-        wanCacheSizeGb: 100,
-        usedWanCacheGb: 34.2
+        compressionAlgorithm: 'Zstandard (Realtime)',
+        wanCacheSizeGb: 50,
+        usedWanCacheGb: 0.0
       },
-      stats: {
-        totalWanTransferredGb: 1420.5,
-        totalRawDataGb: 6850.2,
-        wanReductionRatio: '4.82x (%79.2 Trafik Tasarrufu)',
-        currentThroughputMbps: 18.4,
-        activeSyncTunnels: 4
-      },
-      tunnels: [
-        {
-          id: 'tun-hq-dr',
-          name: 'Merkez HQ -> DR Veri Merkezi',
-          sourceIp: '10.10.0.1',
-          destIp: '10.20.0.1',
-          status: 'Active',
-          latencyMs: 14.2,
-          currentSpeed: '12.8 Mbps',
-          streams: 8,
-          compressionRatio: '5.1x'
-        },
-        {
-          id: 'tun-hq-aws',
-          name: 'Merkez HQ -> AWS Frankfurt S3',
-          sourceIp: '10.10.0.1',
-          destIp: '52.95.120.4',
-          status: 'Active',
-          latencyMs: 42.6,
-          currentSpeed: '5.6 Mbps',
-          streams: 8,
-          compressionRatio: '4.2x'
-        }
-      ]
+      tunnels: []
     };
     fs.writeFileSync(DB_PATH, JSON.stringify(initialData, null, 2), 'utf-8');
   }
@@ -65,7 +37,7 @@ function getData() {
   try {
     return JSON.parse(fs.readFileSync(DB_PATH, 'utf-8'));
   } catch (e) {
-    return { config: {}, stats: {}, tunnels: [] };
+    return { config: {}, tunnels: [] };
   }
 }
 
@@ -76,7 +48,29 @@ function saveData(data) {
 
 module.exports = {
   getStatus: () => {
-    return getData();
+    const stored = getData();
+    const mainDb = db.read();
+    const dedup = mainDb.dedupStats || {};
+    const rawGb = dedup.totalRawBytes ? (dedup.totalRawBytes / (1024 * 1024 * 1024)).toFixed(1) : "0.0";
+    const storedGb = dedup.totalStoredBytes ? (dedup.totalStoredBytes / (1024 * 1024 * 1024)).toFixed(1) : "0.0";
+
+    const reductionRatio = (dedup.totalStoredBytes && dedup.totalRawBytes) 
+      ? `${(dedup.totalRawBytes / Math.max(1, dedup.totalStoredBytes)).toFixed(2)}x`
+      : '1.0x (Sıfır Tasarruf)';
+
+    const activeTunnels = (stored.tunnels || []);
+
+    return {
+      config: stored.config || {},
+      stats: {
+        totalWanTransferredGb: parseFloat(storedGb),
+        totalRawDataGb: parseFloat(rawGb),
+        wanReductionRatio: reductionRatio,
+        currentThroughputMbps: 0,
+        activeSyncTunnels: activeTunnels.length
+      },
+      tunnels: activeTunnels
+    };
   },
   updateConfig: (newConfig) => {
     const data = getData();
@@ -86,7 +80,7 @@ module.exports = {
   },
   purgeWanCache: () => {
     const data = getData();
-    data.config.usedWanCacheGb = 0.0;
+    if (data.config) data.config.usedWanCacheGb = 0.0;
     saveData(data);
     return { success: true, message: 'WAN Deduplication Global Cache temizlendi.' };
   }

@@ -100,88 +100,98 @@ export default function HistoryView({ history, onDeleteHistory, onOpenRestoreMod
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {filteredHistory.map((item) => (
-              <tr key={item.id} className="hover:bg-slate-50/70 transition">
-                <td className="p-3.5 font-bold text-slate-800 flex items-center gap-2">
-                  {item.type === 'sql' ? (
-                    <Database className="w-4 h-4 text-[#0070e0]" />
-                  ) : (
-                    <FileText className="w-4 h-4 text-emerald-600" />
-                  )}
-                  <span>{item.jobName}</span>
-                </td>
-
-                <td className="p-3.5 font-mono text-[11px] text-slate-600">
-                  {item.fileName}
-                </td>
-
-                <td className="p-3.5 font-mono text-slate-700 font-medium">
-                  {item.size}
-                </td>
-
-                <td className="p-3.5 text-slate-500 font-mono text-[11px]">
-                  {new Date(item.timestamp).toLocaleString('tr-TR')}
-                </td>
-
-                <td className="p-3.5">
-                  <div className="flex flex-col gap-1">
-                    {item.isVerified ? (
-                      <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold flex items-center gap-1 w-fit">
-                        <ShieldCheck className="w-3 h-3 text-emerald-600" /> Verified 100%
-                      </span>
+            {filteredHistory.length > 0 ? (
+              filteredHistory.map((item) => (
+                <tr key={item.id} className="hover:bg-slate-50/70 transition">
+                  <td className="p-3.5 font-bold text-slate-800 flex items-center gap-2">
+                    {item.type === 'sql' ? (
+                      <Database className="w-4 h-4 text-[#0070e0]" />
                     ) : (
+                      <FileText className="w-4 h-4 text-emerald-600" />
+                    )}
+                    <span>{item.jobName || 'Yedekleme Görevi'}</span>
+                  </td>
+
+                  <td className="p-3.5 font-mono text-[11px] text-slate-600">
+                    {item.fileName || 'Arşiv Dosyası'}
+                  </td>
+
+                  <td className="p-3.5 font-mono text-slate-700 font-medium">
+                    {item.size || '0 B'}
+                  </td>
+
+                  <td className="p-3.5 text-slate-500 font-mono text-[11px]">
+                    {item.timestamp && !isNaN(new Date(item.timestamp).getTime()) ? new Date(item.timestamp).toLocaleString('tr-TR') : (item.timestamp || 'Yeni')}
+                  </td>
+
+                  <td className="p-3.5">
+                    <div className="flex flex-col gap-1">
+                      {item.isVerified ? (
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold flex items-center gap-1 w-fit">
+                          <ShieldCheck className="w-3 h-3 text-emerald-600" /> Verified 100%
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => handleVerify(item.id)}
+                          disabled={verifyingId === item.id}
+                          className="text-[10px] text-[#0070e0] font-semibold hover:underline flex items-center gap-1"
+                        >
+                          <RefreshCw className={`w-3 h-3 ${verifyingId === item.id ? 'animate-spin' : ''}`} />
+                          <span>Test Et</span>
+                        </button>
+                      )}
+
+                      {item.isImmutable && (
+                        <span 
+                          className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[10px] font-bold flex items-center gap-1 w-fit"
+                          title={item.immutableUntil ? `WORM Değiştirilemez Kilit: ${new Date(item.immutableUntil).toLocaleDateString('tr-TR')} tarihine kadar silinemez` : 'WORM Korumalı'}
+                        >
+                          <Lock className="w-3 h-3 text-amber-600" /> WORM Kilitli
+                        </span>
+                      )}
+                    </div>
+                  </td>
+
+                  <td className="p-3.5 text-right">
+                    <div className="flex items-center justify-end gap-2">
                       <button
-                        onClick={() => handleVerify(item.id)}
-                        disabled={verifyingId === item.id}
-                        className="text-[10px] text-[#0070e0] font-semibold hover:underline flex items-center gap-1"
+                        onClick={() => onOpenRestoreModal(item)}
+                        className="btn-acronis-primary px-3 py-1 text-xs flex items-center gap-1 shadow-xs"
                       >
-                        <RefreshCw className={`w-3 h-3 ${verifyingId === item.id ? 'animate-spin' : ''}`} />
-                        <span>Test Et</span>
+                        <RotateCcw className="w-3 h-3" />
+                        <span>RECOVER</span>
                       </button>
-                    )}
 
-                    {item.isImmutable && (
-                      <span 
-                        className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[10px] font-bold flex items-center gap-1 w-fit"
-                        title={item.immutableUntil ? `WORM Değiştirilemez Kilit: ${new Date(item.immutableUntil).toLocaleDateString('tr-TR')} tarihine kadar silinemez` : 'WORM Korumalı'}
+                      <button
+                        onClick={() => {
+                          if (item.isImmutable && item.immutableUntil && new Date(item.immutableUntil) > new Date()) {
+                            alert(`🛑 BU YEDEK SİLİNEMEZ!\nWORM (Değiştirilemez) koruması devrededir.\nKilit Bitiş: ${new Date(item.immutableUntil).toLocaleDateString('tr-TR')}`);
+                            return;
+                          }
+                          onDeleteHistory(item.id);
+                        }}
+                        className={`p-1.5 rounded transition ${
+                          item.isImmutable 
+                            ? 'text-amber-400 hover:text-amber-600 cursor-not-allowed' 
+                            : 'text-slate-400 hover:text-rose-600'
+                        }`}
+                        title={item.isImmutable ? "WORM Koruması Altında - Silinemez" : "Sil"}
                       >
-                        <Lock className="w-3 h-3 text-amber-600" /> WORM Kilitli
-                      </span>
-                    )}
-                  </div>
-                </td>
-
-                <td className="p-3.5 text-right">
-                  <div className="flex items-center justify-end gap-2">
-                    <button
-                      onClick={() => onOpenRestoreModal(item)}
-                      className="btn-acronis-primary px-3 py-1 text-xs flex items-center gap-1 shadow-xs"
-                    >
-                      <RotateCcw className="w-3 h-3" />
-                      <span>RECOVER</span>
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        if (item.isImmutable && item.immutableUntil && new Date(item.immutableUntil) > new Date()) {
-                          alert(`🛑 BU YEDEK SİLİNEMEZ!\nWORM (Değiştirilemez) koruması devrededir.\nKilit Bitiş: ${new Date(item.immutableUntil).toLocaleDateString('tr-TR')}`);
-                          return;
-                        }
-                        onDeleteHistory(item.id);
-                      }}
-                      className={`p-1.5 rounded transition ${
-                        item.isImmutable 
-                          ? 'text-amber-400 hover:text-amber-600 cursor-not-allowed' 
-                          : 'text-slate-400 hover:text-rose-600'
-                      }`}
-                      title={item.isImmutable ? "WORM Koruması Altında - Silinemez" : "Sil"}
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="6" className="p-8 text-center text-slate-400">
+                  <History className="w-8 h-8 mx-auto mb-2 text-slate-300" />
+                  <p className="font-semibold text-slate-600 text-xs">Kayıtlı Yedekleme Noktası Bulunmuyor</p>
+                  <p className="text-[11px] text-slate-400 mt-1">Bir yedekleme görevi çalıştırıldığında kurtarma noktaları burada listelenecektir.</p>
                 </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>

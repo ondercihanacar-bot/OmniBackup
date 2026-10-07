@@ -385,29 +385,29 @@ export default function SettingsView({ settings, onSaveSettings }) {
             </div>
 
             <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
-              Deduplication: {dedupStats?.efficiencyIndex || '4.32x Kazanç'}
+              Deduplication: {dedupStats?.efficiencyIndex || '1.0x (Aktif)'}
             </span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 text-xs">
             <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
               <div className="text-slate-500 font-medium">Ham Veri Girişi:</div>
-              <div className="text-base font-bold text-slate-800">{dedupStats?.rawGB || '1485.9 GB'}</div>
+              <div className="text-base font-bold text-slate-800">{dedupStats?.rawGB || '0 B'}</div>
             </div>
 
             <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
               <div className="text-slate-500 font-medium">Depolanan Gerçek Alan:</div>
-              <div className="text-base font-bold text-[#0070e0]">{dedupStats?.storedGB || '343.6 GB'}</div>
+              <div className="text-base font-bold text-[#0070e0]">{dedupStats?.storedGB || '0 B'}</div>
             </div>
 
             <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200">
               <div className="text-emerald-700 font-medium">Kazanılan Tasarruf:</div>
-              <div className="text-base font-bold text-emerald-700">{dedupStats?.savedGB || '1142.3 GB'} ({dedupStats?.savingsRatio || '76.9%'})</div>
+              <div className="text-base font-bold text-emerald-700">{dedupStats?.savedGB || '0 B'} ({dedupStats?.savingsRatio || '0%'})</div>
             </div>
 
             <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
               <div className="text-slate-500 font-medium">Filtrelenen Yinelenen Blok:</div>
-              <div className="text-base font-bold text-purple-700">{dedupStats?.duplicateChunksFiltered?.toLocaleString('tr-TR') || '182,390'} Blok</div>
+              <div className="text-base font-bold text-purple-700">{dedupStats?.duplicateChunksFiltered ? dedupStats.duplicateChunksFiltered.toLocaleString('tr-TR') : '0'} Blok</div>
             </div>
           </div>
         </div>

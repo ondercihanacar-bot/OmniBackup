@@ -15,15 +15,11 @@ class SqlEngine {
     return new Promise((resolve) => {
       exec(cmd, { timeout: 10000 }, (err, stdout, stderr) => {
         if (err || stderr) {
-          // If sqlcmd is not present on machine, provide resilient structured simulation
-          const sampleDbs = ['ERP_PROD_DB', 'CRM_MASTER_2026', 'FINANS_MUHASEBE', 'INSAN_KAYNAKLARI', 'E_TICARET_PROD'];
           resolve({
-            success: true,
-            isSimulated: true,
+            success: false,
             server,
-            version: 'Microsoft SQL Server 2022 Enterprise (x64) - Live',
-            databases: sampleDbs,
-            message: `MSSQL bağlantısı başarılı. (${sampleDbs.length} veritabanı keşfedildi)`
+            databases: [],
+            error: `MSSQL sunucusuna (${server}) bağlanılamadı veya sqlcmd bulunamadı: ${err ? err.message : stderr}`
           });
           return;
         }

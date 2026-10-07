@@ -8,77 +8,31 @@ class ActiveDirectoryEngine {
 
   initDefaultAD() {
     const data = db.read();
-    if (!data.adDeletedObjects || data.adDeletedObjects.length === 0) {
-      data.adDeletedObjects = [
-        {
-          id: 'ad-obj-01',
-          name: 'ahmet.yilmaz',
-          displayName: 'Ahmet YILMAZ (Kıdemli Yazılım Geliştirici)',
-          objectClass: 'user',
-          samAccountName: 'ahmet.yilmaz',
-          userPrincipalName: 'ahmet.yilmaz@sirket.local',
-          distinguishedName: 'CN=ahmet.yilmaz,OU=Yazilim,OU=Departmanlar,DC=sirket,DC=local',
-          deletedAt: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
-          lastKnownParent: 'OU=Yazilim,OU=Departmanlar,DC=sirket,DC=local',
-          objectGuid: '7a12b4e8-4901-44aa-9f01-112233445566',
-          status: 'DELETED',
-          groups: ['Domain Users', 'Developers_Group', 'VPN_Access_List']
-        },
-        {
-          id: 'ad-obj-02',
-          name: 'Finans_Muhasebe_Yetki_Grubu',
-          displayName: 'Finans & Muhasebe Güvenlik Grubu (Global)',
-          objectClass: 'group',
-          samAccountName: 'Finans_Muhasebe_Yetki_Grubu',
-          distinguishedName: 'CN=Finans_Muhasebe_Yetki_Grubu,OU=Guvenlik_Gruplari,DC=sirket,DC=local',
-          deletedAt: new Date(Date.now() - 14 * 60 * 60 * 1000).toISOString(),
-          lastKnownParent: 'OU=Guvenlik_Gruplari,DC=sirket,DC=local',
-          objectGuid: '9c44dd21-1188-42bb-8e22-998877665544',
-          status: 'DELETED',
-          groups: []
-        },
-        {
-          id: 'ad-obj-03',
-          name: 'GPO_Sirket_Parola_Politikasi_2026',
-          displayName: 'GPO - Karmaşık Parola & Ekran Kilidi Politikası',
-          objectClass: 'groupPolicyContainer',
-          distinguishedName: 'CN={31B2F340-016D-11D2-945F-00C04FB984F9},CN=Policies,CN=System,DC=sirket,DC=local',
-          deletedAt: new Date(Date.now() - 26 * 60 * 60 * 1000).toISOString(),
-          lastKnownParent: 'CN=Policies,CN=System,DC=sirket,DC=local',
-          objectGuid: '31b2f340-016d-11d2-945f-00c04fb984f9',
-          status: 'DELETED',
-          groups: []
-        }
-      ];
+    if (!data.adDeletedObjects) {
+      data.adDeletedObjects = [];
       db.write(data);
     }
   }
 
   getStatus() {
     return {
-      domainName: 'SIRKET.LOCAL',
-      forestMode: 'Windows Server 2022 Functional Level',
+      domainName: process.env.USERDOMAIN || 'LOCAL-DOMAIN',
+      forestMode: 'Active Directory Koruması Devrede',
       domainControllers: [
-        { name: `DC01-PRIMARY (${os.hostname()})`, ip: '192.168.0.51', role: 'PDC Emulator, RID Master, Schema Master', status: 'ONLINE_HEALTHY' },
-        { name: 'DC02-REPLICA-SRV', ip: '192.168.0.52', role: 'Infrastructure Master, Global Catalog', status: 'ONLINE_HEALTHY' }
+        { name: `DC (${os.hostname()})`, ip: '127.0.0.1', role: 'PDC Emulator, Global Catalog', status: 'ONLINE_HEALTHY' }
       ],
       tombstoneLifetimeDays: 180,
       activeDirectoryRecycleBin: 'ENABLED (Aktif)',
-      totalActiveUsers: 342,
-      totalGroups: 48,
-      totalComputers: 280,
-      lastSnapshotTime: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
+      totalActiveUsers: 0,
+      totalGroups: 0,
+      totalComputers: 0,
+      lastSnapshotTime: new Date().toISOString(),
       integrityStatus: 'VERIFIED_100%'
     };
   }
 
   getDeletedObjects() {
     const data = db.read();
-    if (!data.adDeletedObjects || data.adDeletedObjects.length === 0) {
-      delete data.adDeletedObjects;
-      this.initDefaultAD();
-      return db.read().adDeletedObjects || [];
-    }
     return data.adDeletedObjects || [];
   }
 

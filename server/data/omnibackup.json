@@ -44,43 +44,29 @@
   "history": [],
   "logs": [
     {
-      "id": "log-1791405132633-494",
-      "timestamp": "2026-10-07T20:32:12.633Z",
-      "level": "success",
-      "source": "Auth",
-      "message": "Yetkilendirme doğrulaması başarılı (admin) [2FA]."
-    },
-    {
-      "id": "log-1791403749271-418",
-      "timestamp": "2026-10-07T20:09:09.271Z",
-      "level": "success",
-      "source": "Auth",
-      "message": "Yetkilendirme doğrulaması başarılı (admin) [2FA]."
-    },
-    {
-      "id": "log-1",
-      "timestamp": "2026-10-07T22:15:00.000Z",
+      "id": "log-init-system",
+      "timestamp": "2026-10-07T23:45:00.000Z",
       "level": "info",
       "source": "Engine",
-      "message": "OmniBackup Enterprise Cyber Vault v2.8.3 sistemi hazır ve korumada."
+      "message": "OmniBackup Enterprise Cyber Vault sistemi hazır ve korumada."
     }
   ],
   "license": {
     "status": "TRIAL",
     "tier": "TRIAL_15_DAYS",
-    "tierName": "15 Günlük Tam Yetkili Demo Sürümü",
+    "tierName": "15 Günlük Tam Yetkili Sürüm",
     "hardwareId": "OMNI-HWID-F340-2E73-DD3A",
     "licenseKey": "",
-    "licensedTo": "OmniBackup Değerlendirme Kullanıcısı",
-    "company": "Deneme / POC Kurulumu",
+    "licensedTo": "OmniBackup Kullanıcısı",
+    "company": "Kurulum",
     "installedAt": "2026-10-07T19:17:05.954Z",
     "trialExpiresAt": "2026-10-22T19:17:05.954Z",
     "activatedAt": null,
     "expiresAt": "2026-10-22T19:17:05.954Z",
     "omniHubConnected": false,
     "omniHubServerUrl": "https://omnihub-sd23.onrender.com",
-    "maxAgents": "Sınırsız (Demo)",
-    "maxSqlDatabases": "Sınırsız (Demo)",
+    "maxAgents": "Sınırsız",
+    "maxSqlDatabases": "Sınırsız",
     "allowedFeatures": [
       "MSSQL & MySQL Canlı Yedekleme",
       "VSS Volume Shadow Copy Snapshot",
@@ -95,233 +81,20 @@
     ]
   },
   "dedupStats": {
-    "totalRawBytes": 1485928372224,
-    "totalStoredBytes": 343597383680,
-    "uniqueChunksCount": 42105,
-    "duplicateChunksFiltered": 182390,
+    "totalRawBytes": 0,
+    "totalStoredBytes": 0,
+    "uniqueChunksCount": 0,
+    "duplicateChunksFiltered": 0,
     "compressionAlgorithm": "Zstandard (zstd-v1.5) + Block Hash SHA-256",
-    "lastOptimizationTime": "2026-10-07T19:39:50.289Z"
+    "lastOptimizationTime": "2026-10-07T23:45:00.000Z"
   },
-  "saasTenants": [
-    {
-      "id": "tenant-m365-01",
-      "name": "Kurumsal M365 (sirketiniz.com)",
-      "provider": "microsoft365",
-      "tenantId": "72f988bf-86f1-41af-91ab-2d7cd011db47",
-      "clientId": "omnibackup-app-m365-sec",
-      "status": "CONNECTED",
-      "totalMailboxes": 48,
-      "protectedMailboxes": 48,
-      "totalOneDriveGB": "1420.5 GB",
-      "totalSharePointGB": "890.2 GB",
-      "lastBackupDate": "2026-10-07T17:39:50.300Z",
-      "complianceMode": "LEGAL_HOLD_WORM",
-      "mailboxes": [
-        {
-          "id": "mb-01",
-          "email": "onder@sirketiniz.com",
-          "displayName": "Önder Cihan ACAR (Genel Müdür)",
-          "itemsCount": 38400,
-          "size": "24.8 GB",
-          "lastStatus": "SUCCESS"
-        },
-        {
-          "id": "mb-02",
-          "email": "muhasebe@sirketiniz.com",
-          "displayName": "Finans & Muhasebe",
-          "itemsCount": 52100,
-          "size": "38.2 GB",
-          "lastStatus": "SUCCESS"
-        },
-        {
-          "id": "mb-03",
-          "email": "it-destek@sirketiniz.com",
-          "displayName": "IT Operasyon & Sistem",
-          "itemsCount": 19400,
-          "size": "14.5 GB",
-          "lastStatus": "SUCCESS"
-        },
-        {
-          "id": "mb-04",
-          "email": "ik@sirketiniz.com",
-          "displayName": "İnsan Kaynakları",
-          "itemsCount": 12800,
-          "size": "8.4 GB",
-          "lastStatus": "SUCCESS"
-        }
-      ]
-    },
-    {
-      "id": "tenant-gws-01",
-      "name": "Google Workspace (holding.com.tr)",
-      "provider": "google_workspace",
-      "serviceAccountEmail": "omnibackup-sa@holding.iam.gserviceaccount.com",
-      "status": "CONNECTED",
-      "totalMailboxes": 25,
-      "protectedMailboxes": 25,
-      "totalOneDriveGB": "640.0 GB",
-      "totalSharePointGB": "410.5 GB",
-      "lastBackupDate": "2026-10-07T14:39:50.300Z",
-      "complianceMode": "STANDARD",
-      "mailboxes": [
-        {
-          "id": "gmb-01",
-          "email": "yonetim@holding.com.tr",
-          "displayName": "Yönetim Kurulu",
-          "itemsCount": 29500,
-          "size": "19.2 GB",
-          "lastStatus": "SUCCESS"
-        },
-        {
-          "id": "gmb-02",
-          "email": "pazarlama@holding.com.tr",
-          "displayName": "Pazarlama & İletişim",
-          "itemsCount": 16800,
-          "size": "11.0 GB",
-          "lastStatus": "SUCCESS"
-        }
-      ]
-    }
-  ],
-  "adDeletedObjects": [
-    {
-      "id": "ad-obj-01",
-      "name": "ahmet.yilmaz",
-      "displayName": "Ahmet YILMAZ (Kıdemli Yazılım Geliştirici)",
-      "objectClass": "user",
-      "samAccountName": "ahmet.yilmaz",
-      "userPrincipalName": "ahmet.yilmaz@sirket.local",
-      "distinguishedName": "CN=ahmet.yilmaz,OU=Yazilim,OU=Departmanlar,DC=sirket,DC=local",
-      "deletedAt": "2026-10-07T16:39:50.308Z",
-      "lastKnownParent": "OU=Yazilim,OU=Departmanlar,DC=sirket,DC=local",
-      "objectGuid": "7a12b4e8-4901-44aa-9f01-112233445566",
-      "status": "DELETED",
-      "groups": [
-        "Domain Users",
-        "Developers_Group",
-        "VPN_Access_List"
-      ]
-    },
-    {
-      "id": "ad-obj-02",
-      "name": "Finans_Muhasebe_Yetki_Grubu",
-      "displayName": "Finans & Muhasebe Güvenlik Grubu (Global)",
-      "objectClass": "group",
-      "samAccountName": "Finans_Muhasebe_Yetki_Grubu",
-      "distinguishedName": "CN=Finans_Muhasebe_Yetki_Grubu,OU=Guvenlik_Gruplari,DC=sirket,DC=local",
-      "deletedAt": "2026-10-07T05:39:50.308Z",
-      "lastKnownParent": "OU=Guvenlik_Gruplari,DC=sirket,DC=local",
-      "objectGuid": "9c44dd21-1188-42bb-8e22-998877665544",
-      "status": "DELETED",
-      "groups": []
-    },
-    {
-      "id": "ad-obj-03",
-      "name": "GPO_Sirket_Parola_Politikasi_2026",
-      "displayName": "GPO - Karmaşık Parola & Ekran Kilidi Politikası",
-      "objectClass": "groupPolicyContainer",
-      "distinguishedName": "CN={31B2F340-016D-11D2-945F-00C04FB984F9},CN=Policies,CN=System,DC=sirket,DC=local",
-      "deletedAt": "2026-10-06T17:39:50.308Z",
-      "lastKnownParent": "CN=Policies,CN=System,DC=sirket,DC=local",
-      "objectGuid": "31b2f340-016d-11d2-945f-00c04fb984f9",
-      "status": "DELETED",
-      "groups": []
-    }
-  ],
-  "mspTenants": [
-    {
-      "id": "msp-tenant-01",
-      "name": "Anadolu Lojistik A.Ş.",
-      "contactPerson": "Murat Yılmaz (IT Müdürü)",
-      "contactEmail": "it@anadolulojistik.com",
-      "planType": "MSP Platinum Gold 24/7",
-      "allocatedQuotaGB": 2048,
-      "usedQuotaGB": 684.2,
-      "maxAgents": 15,
-      "activeAgents": 8,
-      "slaTargetPercent": 99.9,
-      "slaAchievedPercent": 100,
-      "totalJobsMonth": 240,
-      "successJobsMonth": 240,
-      "failedJobsMonth": 0,
-      "status": "ACTIVE",
-      "billingCycle": "Aylık",
-      "createdDate": "2026-01-15"
-    },
-    {
-      "id": "msp-tenant-02",
-      "name": "Marmara Sağlık & Poliklinik Grubu",
-      "contactPerson": "Dr. Selin Kaya",
-      "contactEmail": "bilgi@marmarasaglik.com",
-      "planType": "MSP HIPAA/KVKK Sağlık Paketi",
-      "allocatedQuotaGB": 4096,
-      "usedQuotaGB": 1820.5,
-      "maxAgents": 25,
-      "activeAgents": 14,
-      "slaTargetPercent": 99.95,
-      "slaAchievedPercent": 99.98,
-      "totalJobsMonth": 580,
-      "successJobsMonth": 578,
-      "failedJobsMonth": 2,
-      "status": "ACTIVE",
-      "billingCycle": "Yıllık",
-      "createdDate": "2026-02-01"
-    },
-    {
-      "id": "msp-tenant-03",
-      "name": "Ege Resort Oteller Zinciri",
-      "contactPerson": "Caner Demir (Sistem Yöneticisi)",
-      "contactEmail": "teknik@egeresort.com",
-      "planType": "MSP Standart Business",
-      "allocatedQuotaGB": 1024,
-      "usedQuotaGB": 340,
-      "maxAgents": 10,
-      "activeAgents": 4,
-      "slaTargetPercent": 99.5,
-      "slaAchievedPercent": 100,
-      "totalJobsMonth": 120,
-      "successJobsMonth": 120,
-      "failedJobsMonth": 0,
-      "status": "ACTIVE",
-      "billingCycle": "Aylık",
-      "createdDate": "2026-03-10"
-    }
-  ],
+  "saasTenants": [],
+  "adDeletedObjects": [],
+  "mspTenants": [],
   "keyVault": {
-    "vaultStatus": "LOCKED_ENCRYPTED",
+    "vaultStatus": "READY",
     "vaultAlgorithm": "AES-256-GCM + PBKDF2 (100,000 Iterations)",
-    "lastEscrowExport": "2026-09-30T19:39:50.325Z",
-    "keys": [
-      {
-        "id": "key-01",
-        "jobName": "MSSQL - ERP & Muhasebe Veritabanı Yedeği",
-        "keyType": "AES-256 GCM Master Key",
-        "createdAt": "2026-01-10T12:00:00Z",
-        "keyFingerprint": "SHA256: 4f9a...8b21 (Doğrulandı)",
-        "maskedPassword": "•••••••••••••••••••••••• (OMNI-MASTER-SECRET-2026)",
-        "rawPasswordHint": "OMNI-MASTER-SECRET-KEY-2026",
-        "escrowStatus": "ESCROW_SYNCED_OMNIHUB"
-      },
-      {
-        "id": "key-02",
-        "jobName": "Muhasebe & Finans Ortak Klasör Yedeği",
-        "keyType": "AES-256 Military Encryption",
-        "createdAt": "2026-02-14T09:30:00Z",
-        "keyFingerprint": "SHA256: 9e12...77cc (Doğrulandı)",
-        "maskedPassword": "•••••••••••••••••••••••• (FINANCE-SECURE-VAULT)",
-        "rawPasswordHint": "FINANCE-SECURE-VAULT-2026",
-        "escrowStatus": "ESCROW_SYNCED_OMNIHUB"
-      },
-      {
-        "id": "key-03",
-        "jobName": "WORM Değiştirilemez Kilit Anahtarı",
-        "keyType": "Immutable Compliance Token",
-        "createdAt": "2026-03-01T15:45:00Z",
-        "keyFingerprint": "SHA256: c331...aa90 (Doğrulandı)",
-        "maskedPassword": "•••••••••••••••••••••••• (WORM-HARDWARE-LOCK)",
-        "rawPasswordHint": "WORM-AIRGAP-LOCK-PASS-9901",
-        "escrowStatus": "ESCROW_SYNCED_OMNIHUB"
-      }
-    ]
+    "lastEscrowExport": null,
+    "keys": []
   }
 }

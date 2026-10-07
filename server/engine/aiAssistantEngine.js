@@ -1,9 +1,10 @@
 /**
  * OmniAI Disaster Recovery Assistant Engine
- * Natural Language Prompt-based Restore & Enterprise Query Orchestrator
+ * Natural Language Prompt-based Restore & Real Database Query Orchestrator
  */
 const fs = require('fs');
 const path = require('path');
+const db = require('../db');
 
 const DB_PATH = path.join(__dirname, '../data/ai_assistant.json');
 
@@ -15,29 +16,27 @@ function ensureDb() {
       sessions: [
         {
           id: 'session-default',
-          title: 'Genel Sistem Kurtarma & Analiz',
+          title: 'Genel Sistem Analiz ve Kurtarma',
           createdAt: new Date().toISOString(),
           messages: [
             {
               id: 'msg-1',
               sender: 'assistant',
-              text: 'Merhaba! Ben OmniAI Kurtarma Asistanı. Doğal dilde sorgu yazarak yedekleri analiz edebilir, anında geri yükleme planları oluşturabilir veya felaket senaryoları simüle edebilirsiniz. Nasıl yardımcı olabilirim?',
-              timestamp: new Date(Date.now() - 3600000).toISOString(),
+              text: 'Merhaba! Ben OmniAI Kurtarma Asistanı. Doğal dilde sorgu yazarak yedekleri analiz edebilir, sistem durumunu sorgulayabilir veya anında geri yükleme planları oluşturabilirsiniz. Size nasıl yardımcı olabilirim?',
+              timestamp: new Date().toISOString(),
               suggestedActions: [
-                'Son 2 saatteki SQL veritabanı yedeğini doğrula',
-                'Kritik sanal makineler için RTO/RPO analizi yap',
-                'Fidye yazılımı honeypot alarmlarını kontrol et',
-                'Site Failover tatbikatı için senaryo hazırla'
+                'Sistem yedekleme durumunu analiz et',
+                'Depolama hedeflerini kontrol et',
+                'Ransomware kalkanı durumunu incele'
               ]
             }
           ]
         }
       ],
       quickPrompts: [
-        { id: 'qp-1', label: 'SQL DB Hızlı Kurtarma', prompt: 'Finans-SQL sunucusunun en son transaction log yedeğini test ortamına yükle' },
-        { id: 'qp-2', label: 'RPO/RTO Sağlık Raporu', prompt: 'Tüm kritik servislerin RPO ve RTO uyumluluk durumunu listele' },
-        { id: 'qp-3', label: 'Zero-Day Tehdit Kontrolü', prompt: 'Son 24 saatteki değişen blok oranlarını ve şifreleme anomalilerini incele' },
-        { id: 'qp-4', label: 'Kubernetes PVC Geri Dönüş', prompt: 'Production clusterindeki ecommerce-db PVC snapshotını geri yükle' }
+        { id: 'qp-1', label: 'Sistem Sağlık Durumu', prompt: 'Sistem genel durumunu ve son yedekleri analiz et' },
+        { id: 'qp-2', label: 'Depolama Alanları', prompt: 'Kayıtlı depolama alanlarının durumunu raporla' },
+        { id: 'qp-3', label: 'Güvenlik ve Tehdit Kontrolü', prompt: 'Siber kalkan ve ransomware tehdit durumunu incele' }
       ]
     };
     fs.writeFileSync(DB_PATH, JSON.stringify(initialData, null, 2), 'utf-8');
@@ -60,61 +59,49 @@ function saveData(data) {
 
 function generateResponse(prompt) {
   const p = prompt.toLowerCase();
+  const mainDb = db.read();
+  const jobs = mainDb.jobs || [];
+  const history = mainDb.history || [];
+  const destinations = mainDb.destinations || [];
+  const failedCount = history.filter(h => h.status === 'failed').length;
+
   let responseText = '';
   let intent = 'general_query';
   let executionPlan = null;
   let suggestedActions = [];
 
   if (p.includes('sql') || p.includes('veritaban') || p.includes('database')) {
+    const sqlJobs = jobs.filter(j => j.sourceType === 'sql' || j.type === 'sql');
     intent = 'db_restore';
-    responseText = 'SQL Veritabanı analizi tamamlandı. [SRV-MSSQL-PROD / DB_ERP_2026] için son 15 dakikalık CDP log snapshot bulundu. Bütünlük doğrulaması (SHA-256) başarılı. Geri yükleme sandbox ortamında 45 saniyede ayağa kaldırılabilir.';
+    if (sqlJobs.length > 0) {
+      responseText = `Kayıtlı ${sqlJobs.length} adet SQL veritabanı koruma planı incelendi: ${sqlJobs.map(j => j.name).join(', ')}. Sistem anında geri yükleme için hazırdır.`;
+    } else {
+      responseText = 'Sistemde henüz kayıtlı bir SQL veritabanı yedekleme görevi bulunmuyor. Yeni bir SQL yedekleme görevi oluşturmak için "Yedekleme Görevleri" sekmesini kullanabilirsiniz.';
+    }
     executionPlan = {
-      target: 'SRV-MSSQL-PROD (DB_ERP_2026)',
-      restorePoint: 'Bugün 01:45 (CDP Snapshot #8492)',
-      estimatedTime: '45 sn (Instant Mount)',
-      mode: 'Isolated Sandbox / Staging Test',
-      safeScore: 99.8
+      target: sqlJobs.length > 0 ? sqlJobs[0].name : 'Yerel Sistem',
+      activeSqlJobs: sqlJobs.length,
+      mode: 'Standard VSS / Instant Mount',
+      safeScore: 100
     };
-    suggestedActions = ['Test Ortamına Canlı Mount Et', 'Hedef Sunucuya Overwrite Restore Yap', 'Point-in-Time Tablo Düzeyinde İncele'];
-  } else if (p.includes('rpo') || p.includes('rto') || p.includes('rapor') || p.includes('sağlık')) {
-    intent = 'sla_analysis';
-    responseText = 'SLA Uyumluluk Değerlendirmesi: Toplam 42 kritik sunucudan 40 tanesi hedeflenen 15 dk RPO ve 5 dk RTO eşiğine %100 uyumlu. 2 adet uzak ofis NAS yedeğinde WAN bant genişliği sınırlaması nedeniyle RPO 28 dakikaya uzadı. WAN Hızlandırıcı ve Deduplikasyon optimizasyonu önerilmektedir.';
+    suggestedActions = ['Yeni SQL Görevi Oluştur', 'Sistem Yedeklerini Listele'];
+  } else if (p.includes('depo') || p.includes('hedef') || p.includes('storage') || p.includes('disk')) {
+    intent = 'storage_analysis';
+    responseText = `Sistemde ${destinations.length} adet kayıtlı depolama alanı mevcut: ${destinations.map(d => `${d.name} (${d.path || d.type})`).join(', ')}.`;
     executionPlan = {
-      target: 'Enterprise Fleet (42 VM & DB)',
-      slaCompliance: '95.2%',
-      currentAvgRpo: '4.2 Dakika',
-      currentAvgRto: '2.8 Dakika',
-      criticalAlerts: 0
+      destinationsCount: destinations.length,
+      status: 'Ready'
     };
-    suggestedActions = ['WAN Hızlandırmayı Devreye Al', 'Uzak Ofis Yedeklerini Önceliklendir', 'PDF SLA Raporu İndir'];
-  } else if (p.includes('fidye') || p.includes('ransomware') || p.includes('honeypot') || p.includes('şifrele')) {
-    intent = 'threat_defense';
-    responseText = 'Fidye Yazılımı Güvenlik Taraması: 18 Honeypot yem dosyasında herhangi bir yetkisiz şifreleme veya uzantı modifikasyonu tespit edilmedi. Değişen blok entropi seviyesi %1.2 (Normal). İmmutable (Değiştirilemez) WORM Air-Gap depolama 32 gündür kilitli ve güvende.';
-    executionPlan = {
-      threatLevel: 'GÜVENLİ (CLEAN)',
-      honeypotActiveSentry: 18,
-      entropyStatus: 'Stabil (< 3.0 Normal)',
-      wormLockStatus: 'Active WORM (Değiştirilemez)'
-    };
-    suggestedActions = ['Honeypot Tuzaklarını Yenile', 'Air-Gap Anlık Karantina Testi Başlat', 'Immutable Snapshot Kilidini Doğrula'];
-  } else if (p.includes('k8s') || p.includes('kubernetes') || p.includes('pod') || p.includes('pvc')) {
-    intent = 'k8s_restore';
-    responseText = 'Kubernetes Cluster Durumu: k8s-prod-cluster-01 üzerinde 6 Namespace, 24 PVC ve 8 Helm sürümü izleniyor. Son başarılı etcd + PVC snapshot 20 dakika önce alındı.';
-    executionPlan = {
-      cluster: 'k8s-prod-cluster-01',
-      namespaces: ['default', 'production', 'database', 'ingress'],
-      pvcCount: 24,
-      lastSnapshot: '20 dk önce'
-    };
-    suggestedActions = ['Namespace Bazlı Kurtarma Başlat', 'Helm Chart State İndir', 'PVC Verisini Staging Clustere Klonla'];
+    suggestedActions = ['Yeni Depo Ekle', 'Depolama Durumunu İncele'];
   } else {
-    responseText = `"${prompt}" talebiniz OmniAI tarafından çözümlendi. İlgili altyapı bileşenleri, veri havuzları ve şifreli snapshot katalogları tarandı. Sistem tüm koruma politikaları dahilinde optimum kurtarma adımlarını yürütmeye hazırdır.`;
+    responseText = `"${prompt}" talebiniz gerçek sistem verileriyle incelendi. Toplam ${jobs.length} aktif görev, ${history.length} yedekleme kaydı ve ${destinations.length} depolama alanı denetlendi. Sistem durumu stabil ve %100 operasyoneldir.`;
     executionPlan = {
       status: 'Ready',
-      targetScope: 'All Backup Repositories',
-      confidence: 98.5
+      totalJobs: jobs.length,
+      totalBackups: history.length,
+      failedBackups: failedCount
     };
-    suggestedActions = ['Detaylı Sistem Tanılaması Yap', 'Otomatik Kurtarma Simülasyonu Çalıştır'];
+    suggestedActions = ['Genel Rapor Görüntüle', 'Yedekleme Başlat'];
   }
 
   return { responseText, intent, executionPlan, suggestedActions };
@@ -131,7 +118,7 @@ module.exports = {
   },
   askQuestion: (sessionId, prompt) => {
     const data = getData();
-    let session = data.sessions.find(s => s.id === sessionId);
+    let session = (data.sessions || []).find(s => s.id === sessionId);
     if (!session) {
       session = {
         id: `session-${Date.now()}`,
@@ -139,6 +126,7 @@ module.exports = {
         createdAt: new Date().toISOString(),
         messages: []
       };
+      data.sessions = data.sessions || [];
       data.sessions.unshift(session);
     }
 
@@ -167,7 +155,7 @@ module.exports = {
   },
   clearSession: (sessionId) => {
     const data = getData();
-    data.sessions = data.sessions.filter(s => s.id !== sessionId);
+    data.sessions = (data.sessions || []).filter(s => s.id !== sessionId);
     if (data.sessions.length === 0) {
       data.sessions.push({
         id: 'session-default',
@@ -179,7 +167,7 @@ module.exports = {
             sender: 'assistant',
             text: 'Yeni kurtarma oturumu başlatıldı. Size nasıl yardımcı olabilirim?',
             timestamp: new Date().toISOString(),
-            suggestedActions: ['SQL DB Kurtar', 'RPO/RTO Kontrol', 'Honeypot Kontrol']
+            suggestedActions: ['Sistem Durumunu Analiz Et', 'Depolama Kontrolü']
           }
         ]
       });
