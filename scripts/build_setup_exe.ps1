@@ -86,14 +86,18 @@ if ($Process.ExitCode -ne 0) {
     exit 1
 }
 
-# Step 5: Verify Output
+# Step 5: Verify Output & Copy to Root for GitHub Release
 if (Test-Path $OutputFile) {
+    $RootSetupOut = Join-Path $ProjectRoot "OmniBackup_Setup.exe"
+    Copy-Item -Force "$OutputFile" "$RootSetupOut"
+
     $ExeItem = Get-Item $OutputFile
     $ExeSizeMB = [math]::Round($ExeItem.Length / 1MB, 2)
     Write-Host ""
     Write-Host "=======================================================" -ForegroundColor Green
     Write-Host "[OK] BASARILI: Standalone Kurulum Setup Dosyasi Olusturuldu!" -ForegroundColor Green
-    Write-Host "Dosya Yolu    : $OutputFile" -ForegroundColor White
+    Write-Host "Masaustu Yolu : $OutputFile" -ForegroundColor White
+    Write-Host "Repo Koku     : $RootSetupOut" -ForegroundColor White
     Write-Host "Dosya Boyutu  : $ExeSizeMB MB (Tam Offline Kurulum)" -ForegroundColor White
     Write-Host "Uygulama Ikonu: $IconPath (Gomuldu)" -ForegroundColor White
     Write-Host "UAC Manifest  : requireAdministrator (Gomuldu)" -ForegroundColor White
