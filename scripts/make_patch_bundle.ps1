@@ -11,11 +11,18 @@ Write-Host "=======================================================" -Foreground
 Write-Host "[1/3] React Client derleniyor (npm run build)..." -ForegroundColor Yellow
 npm --prefix "$ProjectRoot\client" run build
 
-# 2. Compile OmniUpdater.exe if needed
-Write-Host "[2/3] Native OmniUpdater.exe kontrol ediliyor..." -ForegroundColor Yellow
+# 2. Compile AppLauncher.cs and OmniUpdater.cs
+Write-Host "[2/3] Native OmniBackup.exe & OmniUpdater.exe derleniyor..." -ForegroundColor Yellow
+$IconPath = Join-Path $ProjectRoot "scripts\app.ico"
+$LauncherCs = Join-Path $ProjectRoot "scripts\AppLauncher.cs"
+$LauncherOut = Join-Path $ProjectRoot "scripts\OmniBackup.exe"
+$RootLauncherOut = Join-Path $ProjectRoot "OmniBackup.exe"
+& C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe /target:winexe /out:"$LauncherOut" /win32icon:"$IconPath" /reference:System.Windows.Forms.dll /reference:System.Drawing.dll /reference:"$ProjectRoot\scripts\lib\Microsoft.Web.WebView2.Core.dll" /reference:"$ProjectRoot\scripts\lib\Microsoft.Web.WebView2.WinForms.dll" /optimize+ "$LauncherCs"
+Copy-Item -Force "$LauncherOut" "$RootLauncherOut"
+
 $UpdaterCs = Join-Path $ProjectRoot "scripts\OmniUpdater.cs"
 $UpdaterExe = Join-Path $ProjectRoot "scripts\OmniUpdater.exe"
-& C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe /target:winexe /out:"$UpdaterExe" /reference:System.Windows.Forms.dll /reference:System.Drawing.dll /reference:System.IO.Compression.dll /reference:System.IO.Compression.FileSystem.dll /optimize+ "$UpdaterCs"
+& C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe /target:winexe /out:"$UpdaterExe" /win32icon:"$IconPath" /reference:System.Windows.Forms.dll /reference:System.Drawing.dll /reference:System.IO.Compression.dll /reference:System.IO.Compression.FileSystem.dll /optimize+ "$UpdaterCs"
 
 # 3. Create lightweight omni_patch.zip (Excludes db.json, storage, backups, node_modules)
 Write-Host "[3/3] Hafif Ag Guncelleme Paketi olusturuluyor (omni_patch.zip)..." -ForegroundColor Yellow
@@ -23,8 +30,8 @@ if (Test-Path $PatchZip) { Remove-Item -Force $PatchZip }
 
 Set-Location $ProjectRoot
 
-# Pack core updated files: server (excluding node_modules, db.json and storage), client/dist, scripts, version.json, OmniBackup.exe
-& tar.exe -acf omni_patch.zip --exclude=server/node_modules --exclude=server/db.json --exclude=server/storage --exclude=server/data --exclude=client/src --exclude=client/node_modules --exclude=omni_payload.zip --exclude=omni_patch.zip --exclude=.git server client/dist scripts/OmniUpdater.exe OmniBackup.exe version.json
+# Pack core updated files: server (excluding node_modules, db.json and storage), client/dist, scripts, version.json, OmniBackup.exe, DLLs
+& tar.exe -acf omni_patch.zip --exclude=server/node_modules --exclude=server/db.json --exclude=server/storage --exclude=server/data --exclude=client/src --exclude=client/node_modules --exclude=omni_payload.zip --exclude=omni_patch.zip --exclude=.git server client/dist scripts OmniBackup.exe Microsoft.Web.WebView2.Core.dll Microsoft.Web.WebView2.WinForms.dll WebView2Loader.dll version.json app.ico
 
 if (Test-Path $PatchZip) {
     $Item = Get-Item $PatchZip

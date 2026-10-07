@@ -43,44 +43,78 @@ namespace OmniBackupLauncher
         [DllImport("user32.dll")]
         public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
 
+        public static void Log(string msg)
+        {
+            try
+            {
+                string logPath = Path.Combine(BaseDir, "launcher.log");
+                File.AppendAllText(logPath, string.Format("[{0:yyyy-MM-dd HH:mm:ss.fff}] {1}\r\n", DateTime.Now, msg));
+            }
+            catch { }
+        }
+
         [STAThread]
         static void Main(string[] args)
         {
+            try
+            {
+                WebRequest.DefaultWebProxy = null;
+            }
+            catch { }
+
+            BaseDir = AppDomain.CurrentDomain.BaseDirectory;
+            Log("=== OmniBackup Main Starting ===");
+            AppDomain.CurrentDomain.UnhandledException += (s, e) => {
+                Log("Unhandled AppDomain Exception: " + e.ExceptionObject);
+            };
+            Application.ThreadException += (s, e) => {
+                Log("ThreadException: " + e.Exception);
+            };
+
             bool createdNew;
             SingleInstanceMutex = new Mutex(true, "OmniBackup_Enterprise_Desktop_App_Mutex", out createdNew);
 
-            BaseDir = AppDomain.CurrentDomain.BaseDirectory;
             LoadAppIcon();
 
             if (!createdNew)
             {
-                // App is already running; find existing window or notify
+                Log("Another instance already running, bringing existing instance to front...");
                 BringExistingInstanceToFront();
                 return;
             }
 
+            Log("Acquired single instance mutex. Initializing WinForms...");
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
             try
             {
-                // 1. Ensure Local Node.js Background Server is Active
-                EnsureServerStarted();
-
-                // 2. Setup System Tray
+                // 1. Setup System Tray First for instant user feedback
+                Log("Setting up system tray...");
                 SetupTray();
 
+                // 2. Ensure Local Node.js Background Server is Active
+                Log("Ensuring server started...");
+                EnsureServerStarted();
+                Log("Server status verified.");
+
                 // 3. Launch Native Windows Desktop Form
+                Log("Creating MainWindow...");
                 AppWindow = new MainWindow();
+                Log("MainWindow created. Calling Application.Run...");
                 Application.Run(AppWindow);
+                Log("Application.Run exited normally.");
             }
             catch (Exception ex)
             {
+                Log("FATAL in Main: " + ex.ToString());
                 MessageBox.Show("OmniBackup başlatma hatası: " + ex.Message, "OmniBackup Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
             {
+                Log("Running Cleanup...");
                 Cleanup();
+                Log("Cleanup finished.");
             }
         }
 
@@ -128,19 +162,23 @@ namespace OmniBackupLauncher
         {
             if (IsServerRunning("http://127.0.0.1:3060/api/stats"))
             {
+                Log("Server is already running and responding at http://127.0.0.1:3060/api/stats");
                 return;
             }
 
             string serverJs = Path.Combine(BaseDir, "server", "index.js");
             if (!File.Exists(serverJs))
             {
+                Log("ERROR: Server script not found at: " + serverJs);
                 MessageBox.Show("OmniBackup sunucu dosyaları bulunamadı: " + serverJs, "OmniBackup", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
             string nodePath = FindNodeExecutable();
+            Log("Found nodePath: " + nodePath);
             if (string.IsNullOrEmpty(nodePath))
             {
+                Log("ERROR: Node executable not found.");
                 DialogResult res = MessageBox.Show(
                     "OmniBackup çalıştırmak için Node.js çalışma ortamı gereklidir.\nResmi indirme sayfasını açmak ister misiniz?",
                     "Node.js Gereklidir",
@@ -159,17 +197,20 @@ namespace OmniBackupLauncher
             psi.Arguments = string.Format("\"{0}\"", serverJs);
             psi.WorkingDirectory = BaseDir;
             psi.CreateNoWindow = true;
-            psi.UseShellExecute = false;
+            psi.UseShellExecute = true;
             psi.WindowStyle = ProcessWindowStyle.Hidden;
 
+            Log("Starting Node.js process with working directory: " + BaseDir);
             ServerProcess = Process.Start(psi);
+            Log("Node.js process started. PID=" + (ServerProcess != null ? ServerProcess.Id : 0));
 
-            // Wait up to 6 seconds for server to respond
-            for (int i = 0; i < 20; i++)
+            // Wait up to 10 seconds for server to respond
+            for (int i = 0; i < 30; i++)
             {
                 Thread.Sleep(300);
                 if (IsServerRunning("http://127.0.0.1:3060/api/stats"))
                 {
+                    Log(string.Format("Server responded successfully after {0} ms.", (i + 1) * 300));
                     break;
                 }
             }
@@ -218,7 +259,9 @@ namespace OmniBackupLauncher
             try
             {
                 HttpWebRequest req = (HttpWebRequest)WebRequest.Create(url);
-                req.Timeout = 800;
+                req.Proxy = null;
+                req.Timeout = 1000;
+                req.ReadWriteTimeout = 1000;
                 req.Method = "GET";
                 using (HttpWebResponse resp = (HttpWebResponse)req.GetResponse())
                 {
@@ -413,7 +456,9 @@ namespace OmniBackupLauncher
                 try
                 {
                     HttpWebRequest req = (HttpWebRequest)WebRequest.Create("http://127.0.0.1:3060/api/backup-running");
-                    req.Timeout = 800;
+                    req.Proxy = null;
+                    req.Timeout = 1000;
+                    req.ReadWriteTimeout = 1000;
                     using (HttpWebResponse resp = (HttpWebResponse)req.GetResponse())
                     using (StreamReader reader = new StreamReader(resp.GetResponseStream()))
                     {
@@ -647,14 +692,18 @@ namespace OmniBackupLauncher
         {
             try
             {
+                Program.Log("InitWebViewAsync started.");
                 string userDataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "OmniBackup", "WebView2Data");
                 if (!Directory.Exists(userDataDir))
                 {
                     Directory.CreateDirectory(userDataDir);
                 }
 
+                Program.Log("Creating CoreWebView2Environment at: " + userDataDir);
                 CoreWebView2Environment env = await CoreWebView2Environment.CreateAsync(null, userDataDir, null);
+                Program.Log("CoreWebView2Environment created. Ensuring CoreWebView2Async...");
                 await webView.EnsureCoreWebView2Async(env);
+                Program.Log("EnsureCoreWebView2Async completed successfully.");
 
                 // Configure Desktop App Experience (No URL Bar, No Status Bar, Clean UI)
                 webView.CoreWebView2.Settings.IsStatusBarEnabled = false;
@@ -664,6 +713,7 @@ namespace OmniBackupLauncher
 
                 // Listen for navigation completed
                 webView.NavigationCompleted += (s, e) => {
+                    Program.Log(string.Format("NavigationCompleted: IsSuccess={0}, WebErrorStatus={1}", e.IsSuccess, e.WebErrorStatus));
                     if (!e.IsSuccess)
                     {
                         System.Windows.Forms.Timer retryTimer = new System.Windows.Forms.Timer();
@@ -676,6 +726,7 @@ namespace OmniBackupLauncher
                             {
                                 if (webView != null && !webView.IsDisposed && webView.CoreWebView2 != null)
                                 {
+                                    Program.Log("Retrying navigation to http://127.0.0.1:3060");
                                     webView.Source = new Uri("http://127.0.0.1:3060");
                                 }
                             }
@@ -691,13 +742,16 @@ namespace OmniBackupLauncher
                     this.WindowState = FormWindowState.Normal;
                     this.BringToFront();
                     this.Activate();
+                    Program.Log("Main Form displayed with WebView2 content.");
                 };
 
                 // Navigate directly to the local server
+                Program.Log("Navigating webView.Source to http://127.0.0.1:3060");
                 webView.Source = new Uri("http://127.0.0.1:3060");
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Program.Log("InitWebViewAsync EXCEPTION: " + ex.ToString());
                 SafeFallbackLaunch();
             }
         }
@@ -706,6 +760,7 @@ namespace OmniBackupLauncher
         {
             try
             {
+                Program.Log("Triggering SafeFallbackLaunch...");
                 if (this.IsHandleCreated && this.InvokeRequired)
                 {
                     this.BeginInvoke(new Action(FallbackLaunch));
@@ -715,8 +770,9 @@ namespace OmniBackupLauncher
                     FallbackLaunch();
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                Program.Log("SafeFallbackLaunch EXCEPTION: " + ex.ToString());
                 FallbackLaunch();
             }
         }
@@ -725,6 +781,7 @@ namespace OmniBackupLauncher
         {
             try
             {
+                Program.Log("Executing FallbackLaunch browser popup...");
                 // Hide this empty container so user only sees the clean app window
                 this.Opacity = 0;
                 this.ShowInTaskbar = false;
