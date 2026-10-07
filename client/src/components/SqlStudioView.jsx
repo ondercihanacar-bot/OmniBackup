@@ -579,7 +579,7 @@ export default function SqlStudioView({ onJobCreated, onRefresh }) {
                 >
                   {testResult?.databases?.map(db => (
                     <option key={db} value={db}>🗄️ {db}</option>
-                  )) || <option value="ERP_PROD_DB">🗄️ ERP_PROD_DB</option>}
+                  )) || <option value="master">🗄️ master</option>}
                 </select>
               </div>
 

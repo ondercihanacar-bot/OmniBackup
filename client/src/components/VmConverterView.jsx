@@ -22,7 +22,7 @@ export default function VmConverterView() {
   const [loading, setLoading] = useState(true);
   const [converting, setConverting] = useState(false);
   const [selectedFormat, setSelectedFormat] = useState('VHDX (Microsoft Hyper-V)');
-  const [selectedSource, setSelectedSource] = useState('SRV-MSSQL-PROD');
+  const [selectedSource, setSelectedSource] = useState('Local-System-Image');
   const [injectDrivers, setInjectDrivers] = useState(true);
   const [compression, setCompression] = useState(true);
   const [lastResult, setLastResult] = useState(null);

@@ -479,6 +479,8 @@ export default function App() {
                 stats={stats}
                 jobs={jobs}
                 history={history}
+                agents={agents}
+                destinations={destinations}
               />
             )}
 

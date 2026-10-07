@@ -44,14 +44,14 @@ export default function JobModal({ isOpen, onClose, onSave, job, destinations, a
     type: job?.type || 'folder', // 'image', 'sql', 'folder'
     imageSubType: job?.imageSubType || 'windows_client', // 'windows_client', 'windows_server', 'hyperv'
     sourceDisk: job?.sourceDisk || 'C:',
-    vmName: job?.vmName || 'HyperV_VM01',
+    vmName: job?.vmName || '',
     sqlType: job?.sqlType || 'mssql',
     serverAddress: job?.serverAddress || '127.0.0.1',
     instanceName: job?.instanceName || 'MSSQLSERVER',
     authType: job?.authType || 'windows',
     username: job?.username || 'sa',
     password: job?.password || '',
-    databaseName: job?.databaseName || 'ERP_PROD_DB',
+    databaseName: job?.databaseName || '',
     backupType: job?.backupType || 'full',
     sourcePath: job?.sourcePath || '',
     selectedItems: job?.selectedItems || [],

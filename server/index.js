@@ -1637,7 +1637,7 @@ const getInstalledVersion = () => {
       }
     }
   } catch (e) { }
-  return "2.8.4";
+  return "2.8.5";
 };
 
 // Helper to fetch JSON from remote URL with redirect support
