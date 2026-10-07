@@ -465,7 +465,12 @@ export default function App() {
               <ActivitiesView 
                 jobs={jobs}
                 history={history}
+                activeJobId={activeJobId}
+                progressData={progressData}
                 onRunJob={handleRunJob}
+                onStopJob={handleStopJob}
+                onOpenNewJob={() => { setEditingJob(null); setJobModalOpen(true); }}
+                setActiveTab={setActiveTab}
               />
             )}
 

@@ -662,7 +662,7 @@ namespace OmniBackupLauncher
 
         private void InitializeComponent()
         {
-            this.Text = "OmniBackup Enterprise Cyber Vault v2.8.3";
+            this.Text = "OmniBackup Enterprise Cyber Vault v2.8.4";
             this.Size = new Size(1440, 900);
             this.MinimumSize = new Size(1024, 680);
             this.StartPosition = FormStartPosition.CenterScreen;

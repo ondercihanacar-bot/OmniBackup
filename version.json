@@ -1,9 +1,9 @@
 {
-  "version": "2.8.3",
-  "buildDate": "2026-10-07T22:15:00Z",
+  "version": "2.8.4",
+  "buildDate": "2026-10-07T22:30:00Z",
   "minSupportedVersion": "1.0.0",
   "mandatory": false,
-  "releaseNotes": "OmniBackup Enterprise v2.8.3:\n- Temiz ve Canlı Veri Modeli: Arayüzdeki tüm test ve sahte uyarı verileri temizlendi, canlı gerçek sistem günlüklerine ve görevlerine bağlandı.\n- Dinamik Dashboard & Uyarılar: Sistemde aktif uyarı olmadığında koruma durumunu temiz gösteren yeni akıllı panel devrede.\n- Pürüzsüz OTA Güncelleme: GitHub yönlendirme ve anlık indirme altyapısı optimize edildi.\n- Plan ve Ayar Koruması: Tüm görevler ve özel konfigürasyonlar sıfır kayıpla korunmaktadır.",
+  "releaseNotes": "OmniBackup Enterprise v2.8.4:\n- Demo ve Test Verileri Temizlendi: Aktiviteler, Görev Akışı, Uyarılar ve Kontrol Paneli tamamen gerçek zamanlı ve canlı sistem verilerine bağlandı.\n- Sıfır Demo Verisi Garantisi: Güncellemelerde ve yeniden kurulumlarda hiçbir sahte veya demo veri yüklenmez; kullanıcı planları ve veritabanı %100 korunur.\n- Gerçek Zamanlı Canlı Aktivite Takibi: Devam eden yedeklemeler anlık hız ve ilerleme yüzdesiyle gerçek zamanlı izlenebilir.",
   "downloadUrl": "https://raw.githubusercontent.com/ondercihanacar-bot/OmniBackup/main/omni_patch.zip",
   "setupUrl": "https://github.com/ondercihanacar-bot/OmniBackup/raw/main/OmniBackup_Setup.exe",
   "packageSize": "3.8 MB",
