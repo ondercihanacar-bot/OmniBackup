@@ -98,6 +98,9 @@ namespace OmniBackupLauncher
                         return;
                     }
                 }
+
+                // If existing OmniBackup instance is in tray or background, bring its browser window to front or open it
+                BringBrowserAppToFrontOrOpen();
             }
             catch { }
         }
