@@ -244,11 +244,11 @@ export default function Sidebar({
                   ? 'bg-emerald-900/80 text-emerald-300 border border-emerald-700'
                   : 'bg-amber-950 text-amber-300 border border-amber-700'
               }`}>
-                {license?.status === 'ACTIVE' || license?.status === 'ACTIVE_PERPETUAL' ? 'LİSANSLI' : `${license?.daysRemaining || 15}G DEMO`}
+                {license?.status === 'ACTIVE' || license?.status === 'ACTIVE_PERPETUAL' ? 'LİSANSLI' : `${license?.daysRemaining || 15} GÜN`}
               </span>
             </div>
             <div className="text-[10px] text-slate-400 truncate">
-              {license?.licensedTo || 'Deneme Kullanıcısı'}
+              {license?.licensedTo || 'Sistem Yöneticisi'}
             </div>
             <div className="text-[10px] text-cyan-400 font-semibold group-hover:underline flex items-center gap-1">
               <Key className="w-3 h-3" />

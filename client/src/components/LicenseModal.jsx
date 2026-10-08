@@ -130,10 +130,10 @@ export default function LicenseModal({ isOpen, onClose, license, onLicenseUpdate
                 <ShieldCheck className={`w-5 h-5 ${
                   license?.status === 'ACTIVE' || license?.status === 'ACTIVE_PERPETUAL' ? 'text-emerald-600' : 'text-amber-600'
                 }`} />
-                <span>{license?.tierName || '15 Günlük Tam Yetkili Demo'}</span>
+                <span>{license?.tierName || '15 Günlük Kurumsal Deneme Sürümü'}</span>
               </div>
               <p className="text-[11px] text-slate-600">
-                Lisans Sahibi: <strong className="text-slate-800">{license?.licensedTo || 'Değerlendirme Kullanıcısı'}</strong> ({license?.company || 'Deneme Sürümü'})
+                Lisans Sahibi: <strong className="text-slate-800">{license?.licensedTo || 'Sistem Yöneticisi'}</strong> ({license?.company || 'Kurumsal Kurulum'})
               </p>
             </div>
 

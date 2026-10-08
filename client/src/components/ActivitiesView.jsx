@@ -59,8 +59,17 @@ export default function ActivitiesView({
       if (activeJobId && h.jobId === activeJobId && !progressData?.isFinished) return;
 
       const isSuccess = h.status === 'success';
-      const dateStr = h.timestamp ? new Date(h.timestamp).toLocaleString('tr-TR') : 'Tamamlandı';
-      const durationStr = h.duration ? (h.duration < 60 ? `${h.duration} sn` : `${Math.floor(h.duration / 60)} dk ${h.duration % 60} sn`) : '00:01:00';
+      let durationStr = '< 1 sn';
+      if (typeof h.duration === 'number' && !isNaN(h.duration)) {
+        durationStr = h.duration < 60 ? `${Math.round(h.duration)} sn` : `${Math.floor(h.duration / 60)} dk ${Math.round(h.duration % 60)} sn`;
+      } else if (typeof h.duration === 'string' && h.duration.trim()) {
+        const parsed = parseInt(h.duration, 10);
+        if (!isNaN(parsed)) {
+          durationStr = parsed < 60 ? `${parsed} sn` : `${Math.floor(parsed / 60)} dk ${parsed % 60} sn`;
+        } else {
+          durationStr = h.duration;
+        }
+      }
 
       liveActivities.push({
         id: h.id || `hist-${Math.random()}`,

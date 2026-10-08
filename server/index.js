@@ -14,6 +14,9 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 const db = require('./db');
+// Ensure any legacy demo/mock data is permanently purged across all engines
+db.sanitizeDataFiles();
+
 const backupEngine = require('./engine/backupEngine');
 const scheduler = require('./engine/scheduler');
 

@@ -158,7 +158,7 @@ export default function Navbar({ onRefresh, isRefreshing, stats, activeTab, setA
           title="OmniHub Lisans Durumu & Aktivasyon"
         >
           <span>{license?.status === 'ACTIVE' || license?.status === 'ACTIVE_PERPETUAL' ? '🛡️' : '⏳'}</span>
-          <span>{license?.status === 'ACTIVE' || license?.status === 'ACTIVE_PERPETUAL' ? 'Lisanslı' : `${license?.daysRemaining || 15} Gün Demo`}</span>
+          <span>{license?.status === 'ACTIVE' || license?.status === 'ACTIVE_PERPETUAL' ? 'Lisanslı' : `${license?.daysRemaining || 15} Gün Deneme`}</span>
         </button>
 
         {/* Network OTA Update Available Badge Button */}

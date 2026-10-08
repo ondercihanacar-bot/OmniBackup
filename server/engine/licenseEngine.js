@@ -73,7 +73,7 @@ class LicenseEngine {
       serverHostname: os.hostname(),
       statusText: (lic.status === "ACTIVE" || lic.status === "ACTIVE_PERPETUAL")
         ? "✓ OmniHub Kurumsal Lisans Aktif" 
-        : (isExpired ? "🛑 Lisans / Demo Süresi Doldu" : `⏳ ${daysRemaining} Gün Kaldı (Demo)`)
+        : (isExpired ? "🛑 Lisans / Deneme Süresi Doldu" : `⏳ ${daysRemaining} Gün Kaldı (Deneme Sürümü)`)
     };
   }
 
