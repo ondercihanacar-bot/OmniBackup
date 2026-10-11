@@ -1,34 +1,37 @@
-# Create Desktop Shortcut for OmniBackup Desktop Application
-$WshShell = New-Object -comObject WScript.Shell
-$DesktopPath = [System.Environment]::GetFolderPath([System.Environment+SpecialFolder]::Desktop)
-$ProjectRoot = Split-Path -Parent $PSScriptRoot
+$WshShell = New-Object -ComObject WScript.Shell
+$DesktopPath = [Environment]::GetFolderPath('Desktop')
 
-$ExePath = Join-Path $ProjectRoot "OmniBackup.exe"
-if (-not (Test-Path $ExePath)) {
-    $ExePath = Join-Path $ProjectRoot "scripts\OmniBackup.exe"
+$Shortcuts = @(
+    (Join-Path $DesktopPath "OmniBackup.lnk"),
+    (Join-Path $DesktopPath "OmniBackup Enterprise.lnk")
+)
+
+$TargetExe = "C:\OmniBackup\OmniBackup.exe"
+$WorkingDir = "C:\OmniBackup"
+$IconFile = "C:\OmniBackup\app.ico"
+
+if (-not (Test-Path $TargetExe)) {
+    $TargetExe = Join-Path (Split-Path -Parent $PSScriptRoot) "OmniBackup.exe"
+    $WorkingDir = Split-Path -Parent $PSScriptRoot
+    $IconFile = Join-Path (Split-Path -Parent $PSScriptRoot) "scripts\app.ico"
 }
 
-$IconPath = Join-Path $ProjectRoot "scripts\app.ico"
-if (-not (Test-Path $IconPath)) {
-    $IconPath = Join-Path $ProjectRoot "app.ico"
+foreach ($ShortcutPath in $Shortcuts) {
+    try {
+        $Shortcut = $WshShell.CreateShortcut($ShortcutPath)
+        $Shortcut.TargetPath = $TargetExe
+        $Shortcut.WorkingDirectory = $WorkingDir
+        $Shortcut.Description = "OmniBackup Enterprise Cyber Vault - Kurumsal Veri Koruma ve Yedekleme Platformu"
+        if (Test-Path $IconFile) {
+            $Shortcut.IconLocation = "$IconFile,0"
+        } else {
+            $Shortcut.IconLocation = "$TargetExe,0"
+        }
+        $Shortcut.Save()
+        Write-Host "[OK] Kisayol basariyla olusturuldu/guncellendi: $ShortcutPath" -ForegroundColor Green
+        Write-Host "     Hedef: $TargetExe" -ForegroundColor Cyan
+        Write-Host "     Calisma Dizini: $WorkingDir" -ForegroundColor Cyan
+    } catch {
+        Write-Host "[HATA] Kisayol olusturulamadi: $_" -ForegroundColor Red
+    }
 }
-
-$ShortcutPath = Join-Path $DesktopPath "OmniBackup Cyber Vault.lnk"
-$Shortcut = $WshShell.CreateShortcut($ShortcutPath)
-
-if (Test-Path $ExePath) {
-    $Shortcut.TargetPath = $ExePath
-    $Shortcut.Arguments = ""
-} else {
-    $Shortcut.TargetPath = "wscript.exe"
-    $Shortcut.Arguments = "`"$ProjectRoot\scripts\launcher.vbs`""
-}
-
-$Shortcut.WorkingDirectory = $ProjectRoot
-$Shortcut.Description = "OmniBackup Enterprise Cyber Vault Masaüstü Uygulaması"
-if (Test-Path $IconPath) {
-    $Shortcut.IconLocation = "$IconPath, 0"
-}
-$Shortcut.Save()
-
-Write-Host "[OK] Desktop Shortcut Created: $ShortcutPath" -ForegroundColor Green
