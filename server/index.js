@@ -1815,8 +1815,7 @@ app.get('/api/update/download', (req, res) => {
 app.post('/api/update/apply', async (req, res) => {
   const { downloadUrl } = req.body;
   const projectRoot = path.resolve(__dirname, '..');
-  const tempDir = require('os').tmpdir();
-  const patchTempZip = path.join(tempDir, `omni_patch_${Date.now()}.zip`);
+  const patchTempZip = path.join(projectRoot, 'omni_patch_update.zip');
   const localPatchSource = path.join(projectRoot, 'omni_patch.zip');
   const updaterExe = path.join(projectRoot, 'scripts', 'OmniUpdater.exe');
 
@@ -1836,18 +1835,15 @@ app.post('/api/update/apply', async (req, res) => {
       return res.status(500).json({ success: false, error: "OmniUpdater.exe aracı bulunamadı." });
     }
 
-    // Copy updater to tempDir so it does not lock scripts/OmniUpdater.exe during replacement
-    const tempUpdaterExe = path.join(tempDir, `OmniUpdater_Runner_${Date.now()}.exe`);
-    fs.copyFileSync(updaterExe, tempUpdaterExe);
-
-    // Launch OmniUpdater from temp directory detached
+    // Launch OmniUpdater directly from legitimate application directory (never from %TEMP% to prevent AV heuristic flags)
     const parentPid = process.pid;
     const relaunchExe = path.join(projectRoot, 'OmniBackup.exe');
     const { spawn } = require('child_process');
 
-    const updaterProcess = spawn(tempUpdaterExe, [projectRoot, patchTempZip, String(parentPid), relaunchExe], {
+    const updaterProcess = spawn(updaterExe, [projectRoot, patchTempZip, String(parentPid), relaunchExe], {
       detached: true,
-      stdio: 'ignore'
+      stdio: 'ignore',
+      cwd: projectRoot
     });
     updaterProcess.unref();
 

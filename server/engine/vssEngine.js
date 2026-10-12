@@ -55,7 +55,7 @@ class VssEngine {
         }
       }, 3000);
 
-      exec(`powershell -NoProfile -ExecutionPolicy Bypass -Command "${psScript.replace(/\n/g, ' ')}"`, (err, stdout, stderr) => {
+      exec(`powershell -NoProfile -Command "${psScript.replace(/\n/g, ' ')}"`, (err, stdout, stderr) => {
         if (resolved) return;
         resolved = true;
         clearTimeout(timer);
@@ -100,7 +100,7 @@ class VssEngine {
     `;
 
     return new Promise((resolve) => {
-      exec(`powershell -NoProfile -ExecutionPolicy Bypass -Command "${psScript.replace(/\n/g, ' ')}"`, () => {
+      exec(`powershell -NoProfile -Command "${psScript.replace(/\n/g, ' ')}"`, () => {
         resolve(true);
       });
     });

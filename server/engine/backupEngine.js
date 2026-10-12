@@ -86,7 +86,7 @@ class BackupEngine {
   // Explore Drives on Server
   async getSystemDrives() {
     return new Promise((resolve) => {
-      exec(`powershell -NoProfile -ExecutionPolicy Bypass -Command "Get-PSDrive -PSProvider FileSystem | Select-Object Name, Root, Used, Free | ConvertTo-Json"`, (err, stdout) => {
+      exec(`powershell -NoProfile -Command "Get-PSDrive -PSProvider FileSystem | Select-Object Name, Root, Used, Free | ConvertTo-Json"`, (err, stdout) => {
         try {
           const parsed = JSON.parse(stdout);
           const list = Array.isArray(parsed) ? parsed : [parsed];
@@ -217,7 +217,7 @@ class BackupEngine {
     `;
 
     return new Promise((resolve) => {
-      exec(`powershell -NoProfile -ExecutionPolicy Bypass -Command "${psScript.replace(/\n/g, ' ')}"`, (err, stdout, stderr) => {
+      exec(`powershell -NoProfile -Command "${psScript.replace(/\n/g, ' ')}"`, (err, stdout, stderr) => {
         try {
           const parsed = JSON.parse(stdout);
           if (parsed && parsed.databases) return resolve(parsed);
@@ -225,10 +225,9 @@ class BackupEngine {
           // ignore
         }
         resolve({
-          success: true,
-          simulated: true,
-          version: "Microsoft SQL Server 2022 (RTM) - 16.0.1000.6 (X64) Enterprise Edition",
-          databases: ["ERP_PROD_DB", "Muhasebe_2026", "HR_MasterDB", "ECommerce_DB", "OmniCore"]
+          success: false,
+          error: "SQL Server bağlantısı sağlanamadı. Lütfen SQL servisinin çalıştığından emin olun.",
+          databases: []
         });
       });
     });
